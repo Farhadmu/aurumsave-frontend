@@ -24,6 +24,7 @@ import {
   X,
   User,
   Fingerprint,
+  Sparkles,
 } from 'lucide-react';
 
 export default function CompliancePage() {
@@ -42,6 +43,29 @@ export default function CompliancePage() {
     'Front of document is illegible or blurred',
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copilotLoading, setCopilotLoading] = useState(false);
+  const [copilotEvaluation, setCopilotEvaluation] = useState<any>(null);
+
+  const runComplianceCopilot = async () => {
+    if (!selectedApp) return;
+    setCopilotLoading(true);
+    try {
+      const res = await apiRequest<{ success: boolean; data: any }>(
+        `/ai/copilot/kyc/${selectedApp._id}`,
+        { method: 'POST' },
+      );
+      if (res.success && res.data) {
+        setCopilotEvaluation(res.data);
+        if (res.data.suggestedReviewNotes?.en) {
+          setReviewNotes(res.data.suggestedReviewNotes.en);
+        }
+      }
+    } catch (err: any) {
+      console.error('Compliance copilot evaluation failed:', err);
+    } finally {
+      setCopilotLoading(false);
+    }
+  };
 
   const loadQueue = async () => {
     try {
@@ -315,6 +339,81 @@ export default function CompliancePage() {
                   <p className="text-[10px] text-emerald-400 font-mono">Address Verified: Dhaka Division</p>
                 </div>
               </div>
+            </div>
+
+            {/* AI Compliance Copilot Widget */}
+            <div className="p-4 rounded-2xl bg-aurum-midnight/80 border border-aurum-gold/40 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="w-4 h-4 text-aurum-gold" />
+                  <span className="text-xs font-bold text-aurum-text font-serif-luxury">
+                    BFIU AI Compliance Copilot
+                  </span>
+                </div>
+                {!copilotEvaluation ? (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    isLoading={copilotLoading}
+                    onClick={runComplianceCopilot}
+                    leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+                  >
+                    Run AI Verification Analysis
+                  </Button>
+                ) : (
+                  <Badge
+                    variant={
+                      copilotEvaluation.recommendation === 'APPROVE'
+                        ? 'emerald'
+                        : copilotEvaluation.recommendation === 'REQUEST_REUPLOAD'
+                        ? 'amber'
+                        : 'rose'
+                    }
+                    size="sm"
+                  >
+                    AI: {copilotEvaluation.recommendation} ({copilotEvaluation.confidenceScorePct}%)
+                  </Badge>
+                )}
+              </div>
+
+              {copilotEvaluation && (
+                <div className="space-y-3 pt-2 border-t border-aurum-border/60 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {copilotEvaluation.checks?.map((c: any, i: number) => (
+                      <div
+                        key={i}
+                        className={`p-2.5 rounded-xl border ${
+                          c.passed
+                            ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
+                            : 'bg-rose-950/20 border-rose-500/30 text-rose-300'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-1.5 font-bold text-[11px]">
+                          {c.passed ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          ) : (
+                            <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+                          )}
+                          <span>{c.name}</span>
+                        </div>
+                        <p className="text-[10px] text-aurum-text-muted mt-1">{c.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-aurum-surface/80 border border-aurum-border space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-aurum-gold block">
+                      Grounded Compliance Explanation
+                    </span>
+                    <p className="text-[11px] text-aurum-text-muted leading-relaxed">
+                      {copilotEvaluation.explanation?.en}
+                    </p>
+                    <p className="text-[11px] text-aurum-text-muted leading-relaxed font-sans mt-1">
+                      {copilotEvaluation.explanation?.bn}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Audit Notes */}

@@ -63,6 +63,8 @@ export default function GoalsPage() {
   const [calcMonths, setCalcMonths] = useState<number>(12);
   const [calcResult, setCalcResult] = useState<any>(null);
   const [calcLoading, setCalcLoading] = useState(false);
+  const [advisorResult, setAdvisorResult] = useState<any>(null);
+  const [advisorLoading, setAdvisorLoading] = useState(false);
 
   useEffect(() => {
     fetchGoals();
@@ -86,20 +88,35 @@ export default function GoalsPage() {
 
   const runCalculator = async (grams: number, months: number) => {
     setCalcLoading(true);
+    setAdvisorLoading(true);
     try {
-      const res = await apiRequest('/goals/calculate', {
-        method: 'POST',
-        body: JSON.stringify({
-          targetWeightMg: Math.round(grams * 1000),
-          targetMonths: months,
+      const [res, advRes] = await Promise.all([
+        apiRequest('/goals/calculate', {
+          method: 'POST',
+          body: JSON.stringify({
+            targetWeightMg: Math.round(grams * 1000),
+            targetMonths: months,
+          }),
         }),
-      });
+        apiRequest('/goals/advisor/simulate', {
+          method: 'POST',
+          body: JSON.stringify({
+            targetGrams: grams,
+            targetMonths: months,
+            language: language,
+          }),
+        }).catch(() => null),
+      ]);
+
       if (res.success) {
         setCalcResult(res.data);
       }
+      if (advRes && advRes.success) {
+        setAdvisorResult(advRes.data);
+      }
     } catch {
       // Indicative client fallback
-      const estRate = 11500;
+      const estRate = 12450;
       const totalBdt = Math.round(grams * estRate);
       setCalcResult({
         targetAmountBdt: totalBdt,
@@ -113,6 +130,7 @@ export default function GoalsPage() {
       });
     } finally {
       setCalcLoading(false);
+      setAdvisorLoading(false);
     }
   };
 
@@ -477,6 +495,91 @@ export default function GoalsPage() {
                       </span>
                     </div>
                   </div>
+
+                  {/* AI Scenario Projections & Grounded Advisory */}
+                  {advisorResult && (
+                    <div className="p-5 rounded-2xl bg-aurum-midnight/80 border border-aurum-gold/30 space-y-4">
+                      <div className="flex items-center justify-between pb-3 border-b border-aurum-border/60">
+                        <div className="flex items-center space-x-2">
+                          <Sparkles className="w-4 h-4 text-aurum-gold animate-pulse" />
+                          <span className="text-xs font-bold text-aurum-text font-serif-luxury">
+                            {language === 'bn' ? 'অরামসেভ স্মার্ট সঞ্চয় অ্যাডভাইজর' : 'AurumSave Smart Goal Advisor'}
+                          </span>
+                        </div>
+                        <Badge
+                          variant={
+                            advisorResult.feasibilityScore >= 80
+                              ? 'emerald'
+                              : advisorResult.feasibilityScore >= 50
+                              ? 'gold'
+                              : 'rose'
+                          }
+                          size="sm"
+                        >
+                          {language === 'bn' ? 'সম্ভাব্যতা স্কোর: ' : 'Feasibility: '}
+                          {toLocalizedDigits(advisorResult.feasibilityScore)}%
+                        </Badge>
+                      </div>
+
+                      {/* 3 Scenario Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="p-3 rounded-xl bg-aurum-surface/80 border border-aurum-border/60 text-xs space-y-1">
+                          <span className="text-[10px] uppercase font-bold text-sky-400 block">
+                            🛡️ {language === 'bn' ? 'রক্ষণশীল (+৩%/বছর)' : 'Conservative (+3%)'}
+                          </span>
+                          <span className="font-bold text-aurum-text font-mono block">
+                            {formatLocalizedBDT(advisorResult.scenarios?.conservative?.projectedMaturityValueBdt)}
+                          </span>
+                          <span className="text-[10px] text-aurum-text-dim block">
+                            {language === 'bn' ? 'সম্ভাব্য লাভ: ' : 'Gain: '}
+                            +{formatLocalizedBDT(advisorResult.scenarios?.conservative?.projectedNominalGainBdt)}
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-aurum-surface/80 border border-aurum-gold/40 text-xs space-y-1 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 bg-aurum-gold text-aurum-midnight text-[9px] font-bold px-1.5 py-0.5 rounded-bl">
+                            {language === 'bn' ? 'বেসলাইন' : 'Baseline'}
+                          </div>
+                          <span className="text-[10px] uppercase font-bold text-aurum-gold block">
+                            ⚖️ {language === 'bn' ? 'প্রত্যাশিত (+৯%/বছর)' : 'Baseline (+9%)'}
+                          </span>
+                          <span className="font-bold text-aurum-text font-mono block">
+                            {formatLocalizedBDT(advisorResult.scenarios?.baseline?.projectedMaturityValueBdt)}
+                          </span>
+                          <span className="text-[10px] text-emerald-400 block">
+                            {language === 'bn' ? 'সম্ভাব্য লাভ: ' : 'Gain: '}
+                            +{formatLocalizedBDT(advisorResult.scenarios?.baseline?.projectedNominalGainBdt)}
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-aurum-surface/80 border border-aurum-border/60 text-xs space-y-1">
+                          <span className="text-[10px] uppercase font-bold text-emerald-400 block">
+                            🚀 {language === 'bn' ? 'গতিশীল (+১৫%/বছর)' : 'Dynamic (+15%)'}
+                          </span>
+                          <span className="font-bold text-aurum-text font-mono block">
+                            {formatLocalizedBDT(advisorResult.scenarios?.dynamic?.projectedMaturityValueBdt)}
+                          </span>
+                          <span className="text-[10px] text-emerald-400 block">
+                            {language === 'bn' ? 'সম্ভাব্য লাভ: ' : 'Gain: '}
+                            +{formatLocalizedBDT(advisorResult.scenarios?.dynamic?.projectedNominalGainBdt)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Grounded Advice Bullets */}
+                      <div className="space-y-1.5 pt-2">
+                        {(language === 'bn'
+                          ? advisorResult.recommendations?.bilingualNotes?.bn || []
+                          : advisorResult.recommendations?.bilingualNotes?.en || []
+                        ).map((note: string, idx: number) => (
+                          <div key={idx} className="flex items-start space-x-2 text-[11px] text-aurum-text-muted leading-relaxed">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-aurum-gold shrink-0 mt-0.5" />
+                            <span>{note}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <a
                     href="/trade"
