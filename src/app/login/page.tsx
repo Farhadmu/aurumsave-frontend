@@ -149,96 +149,98 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Fast Role Switcher */}
-        <div className="p-5 rounded-2xl bg-aurum-card/80 border border-aurum-border space-y-3">
-          <div className="flex items-center space-x-2 text-xs font-bold text-aurum-text">
-            <Key className="w-3.5 h-3.5 text-aurum-gold" />
-            <span>One-Click Role Switcher (Evaluation Accounts)</span>
+        {/* Fast Role Switcher (Development & Staging Testing Only - Strictly Hidden in Production) */}
+        {process.env.NODE_ENV !== 'production' && (
+          <div className="p-5 rounded-2xl bg-aurum-card/80 border border-aurum-border space-y-3">
+            <div className="flex items-center space-x-2 text-xs font-bold text-aurum-text">
+              <Key className="w-3.5 h-3.5 text-aurum-gold" />
+              <span>One-Click Role Switcher (Evaluation Accounts)</span>
+            </div>
+            <p className="text-[11px] text-aurum-text-muted">
+              Click any role to autofill test credentials:
+            </p>
+
+            <div className="grid grid-cols-2 gap-2 text-left">
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickLogin('customer@aurumsave.com', 'Aurum#Customer2026!')
+                }
+                className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
+              >
+                <span className="text-xs font-bold text-aurum-text block">Demo Customer</span>
+                <span className="text-[10px] font-mono text-aurum-gold block">
+                  customer@aurumsave.com
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickLogin('superadmin@aurumsave.com', 'Aurum#SuperAdmin2026!')
+                }
+                className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
+              >
+                <span className="text-xs font-bold text-aurum-text block">Super Administrator</span>
+                <span className="text-[10px] font-mono text-aurum-gold block">
+                  superadmin@aurumsave.com
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickLogin('compliance@aurumsave.com', 'Aurum#Compliance2026!')
+                }
+                className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
+              >
+                <span className="text-xs font-bold text-aurum-text block">KYC Compliance</span>
+                <span className="text-[10px] font-mono text-aurum-gold block">
+                  compliance@aurumsave.com
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickLogin('finance@aurumsave.com', 'Aurum#Finance2026!')
+                }
+                className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
+              >
+                <span className="text-xs font-bold text-aurum-text block">Finance & Treasury</span>
+                <span className="text-[10px] font-mono text-aurum-gold block">
+                  finance@aurumsave.com
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickLogin('support@aurumsave.com', 'Aurum#Support2026!')
+                }
+                className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
+              >
+                <span className="text-xs font-bold text-aurum-text block">Customer Concierge</span>
+                <span className="text-[10px] font-mono text-aurum-gold block">
+                  support@aurumsave.com
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickLogin('auditor@aurumsave.com', 'Aurum#Auditor2026!')
+                }
+                className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
+              >
+                <span className="text-xs font-bold text-aurum-text block">External Auditor</span>
+                <span className="text-[10px] font-mono text-aurum-gold block">
+                  auditor@aurumsave.com
+                </span>
+              </button>
+            </div>
           </div>
-          <p className="text-[11px] text-aurum-text-muted">
-            Click any role to autofill test credentials:
-          </p>
-
-          <div className="grid grid-cols-2 gap-2 text-left">
-            <button
-              type="button"
-              onClick={() =>
-                handleQuickLogin('customer@aurumsave.com', 'Aurum#Customer2026!')
-              }
-              className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
-            >
-              <span className="text-xs font-bold text-aurum-text block">Demo Customer</span>
-              <span className="text-[10px] font-mono text-aurum-gold block">
-                customer@aurumsave.com
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                handleQuickLogin('superadmin@aurumsave.com', 'Aurum#SuperAdmin2026!')
-              }
-              className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
-            >
-              <span className="text-xs font-bold text-aurum-text block">Super Administrator</span>
-              <span className="text-[10px] font-mono text-aurum-gold block">
-                superadmin@aurumsave.com
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                handleQuickLogin('compliance@aurumsave.com', 'Aurum#Compliance2026!')
-              }
-              className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
-            >
-              <span className="text-xs font-bold text-aurum-text block">KYC Compliance</span>
-              <span className="text-[10px] font-mono text-aurum-gold block">
-                compliance@aurumsave.com
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                handleQuickLogin('finance@aurumsave.com', 'Aurum#Finance2026!')
-              }
-              className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
-            >
-              <span className="text-xs font-bold text-aurum-text block">Finance & Treasury</span>
-              <span className="text-[10px] font-mono text-aurum-gold block">
-                finance@aurumsave.com
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                handleQuickLogin('support@aurumsave.com', 'Aurum#Support2026!')
-              }
-              className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
-            >
-              <span className="text-xs font-bold text-aurum-text block">Customer Concierge</span>
-              <span className="text-[10px] font-mono text-aurum-gold block">
-                support@aurumsave.com
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                handleQuickLogin('auditor@aurumsave.com', 'Aurum#Auditor2026!')
-              }
-              className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-left transition-all"
-            >
-              <span className="text-xs font-bold text-aurum-text block">External Auditor</span>
-              <span className="text-[10px] font-mono text-aurum-gold block">
-                auditor@aurumsave.com
-              </span>
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
