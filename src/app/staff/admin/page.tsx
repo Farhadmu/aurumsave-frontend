@@ -25,6 +25,9 @@ import {
   Scale,
   RefreshCw,
   Lock,
+  AlertTriangle,
+  Power,
+  Radio,
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -38,19 +41,37 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [emergencySettings, setEmergencySettings] = useState<any[]>([
+    { key: 'PAUSE_BUY_ORDERS', value: false, label: 'Pause Gold Purchases', desc: 'Temporary halt on new BUY orders during volatility' },
+    { key: 'PAUSE_SELL_ORDERS', value: false, label: 'Pause Gold Liquidations', desc: 'Temporary freeze on client SELL requests' },
+    { key: 'MAINTENANCE_MODE', value: false, label: 'Platform Incident Lockdown', desc: 'Displays maintenance notice across public site' },
+    { key: 'BKASH_GATEWAY_ACTIVE', value: true, label: 'bKash MFS Direct Gateway', desc: 'Enable / disable bKash PGW API' },
+    { key: 'NAGAD_GATEWAY_ACTIVE', value: true, label: 'Nagad Direct Gateway', desc: 'Enable / disable Nagad PGW API' },
+    { key: 'SSLCOMMERZ_GATEWAY_ACTIVE', value: true, label: 'SSLCommerz Gateway', desc: 'Cards, Netbanking & Multi-MFS checkout' },
+  ]);
+
   const loadData = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const [ovRes, usrRes] = await Promise.all([
+      const [ovRes, usrRes, setRes] = await Promise.all([
         apiRequest<{ success: boolean; data: any }>('/admin/overview'),
         apiRequest<{ success: boolean; data: any[] }>(
           `/admin/users${roleFilter ? `?role=${roleFilter}` : ''}`,
         ),
+        apiRequest<{ success: boolean; data: any[] }>('/admin/settings').catch(() => null),
       ]);
 
       if (ovRes.success) setOverview(ovRes.data);
       if (usrRes.success) setUsersList(usrRes.data);
+      if (setRes && setRes.success && Array.isArray(setRes.data)) {
+        setEmergencySettings((prev) =>
+          prev.map((item) => {
+            const found = setRes.data.find((s: any) => s.key === item.key);
+            return found ? { ...item, value: Boolean(found.value) } : item;
+          }),
+        );
+      }
     } catch (err: any) {
       console.error('Failed to load admin data:', err);
       setError('Unable to load executive administration statistics.');
@@ -84,6 +105,24 @@ export default function AdminPage() {
       );
     } catch (err: any) {
       alert(err.message || 'Action failed');
+    }
+  };
+
+  const handleToggleSetting = async (key: string, currentValue: boolean) => {
+    try {
+      await apiRequest('/admin/settings', {
+        method: 'POST',
+        body: JSON.stringify({
+          key,
+          value: !currentValue,
+          description: `Super Admin emergency control update for ${key}`,
+        }),
+      });
+      setEmergencySettings((prev) =>
+        prev.map((s) => (s.key === key ? { ...s, value: !currentValue } : s)),
+      );
+    } catch (err: any) {
+      alert(err.message || 'Failed to update platform emergency setting');
     }
   };
 
@@ -169,6 +208,61 @@ export default function AdminPage() {
             Double-Entry Verified
           </span>
         </Card>
+      </div>
+
+      {/* Financial Emergency Controls (Kill Switches) */}
+      <div className="rounded-3xl bg-aurum-card border border-aurum-border p-6 sm:p-8 shadow-card-luxury space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-aurum-border">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-serif-luxury text-xl font-bold text-aurum-text">
+                Platform Financial Emergency Controls
+              </h3>
+              <p className="text-xs text-aurum-text-muted">
+                Audited kill-switches and payment gateway enablement (Super Admin Authorization Required)
+              </p>
+            </div>
+          </div>
+          <Badge variant="gold" size="sm">
+            Dual-Control Enforced
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {emergencySettings.map((s) => (
+            <div
+              key={s.key}
+              className={`p-4 rounded-2xl border transition-all flex items-start justify-between space-x-3 ${
+                s.value
+                  ? 'bg-rose-950/20 border-rose-500/40 text-rose-200'
+                  : 'bg-aurum-surface border-aurum-border text-aurum-text'
+              }`}
+            >
+              <div>
+                <span className="font-bold text-xs block text-aurum-text">{s.label}</span>
+                <span className="text-[11px] text-aurum-text-muted mt-0.5 block leading-snug">
+                  {s.desc}
+                </span>
+                <span className="text-[10px] font-mono text-aurum-text-dim mt-1.5 block">
+                  Config Key: {s.key}
+                </span>
+              </div>
+              <button
+                onClick={() => handleToggleSetting(s.key, s.value)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  s.value
+                    ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg'
+                    : 'bg-aurum-card hover:bg-aurum-surface border border-aurum-border text-aurum-text-muted'
+                }`}
+              >
+                {s.value ? 'HALTED' : 'ACTIVE'}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Staff & User Management Table */}
