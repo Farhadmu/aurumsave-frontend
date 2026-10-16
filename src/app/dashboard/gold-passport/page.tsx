@@ -99,13 +99,13 @@ export default function GoldPassportPage() {
             </div>
             <div>
               <span className="text-[10px] uppercase font-mono tracking-widest text-aurum-gold font-bold block">
-                PEOPLE'S REPUBLIC OF BANGLADESH • ALLOCATED BULLION DEPOSITORY
+                AURUMSAVE PLATFORM REPOSITORY • ALLOCATED DIGITAL BULLION REGISTRY
               </span>
               <h2 className="text-xl sm:text-2xl font-serif-luxury font-bold text-aurum-text tracking-wide mt-0.5">
-                CERTIFICATE OF GOLD CUSTODY
+                CERTIFICATE OF ALLOCATED GOLD HOLDINGS
               </h2>
               <span className="text-xs text-aurum-text-muted font-mono">
-                {language === 'bn' ? 'দলিল নম্বর: ' : 'Document Ref: '}
+                {language === 'bn' ? 'সনদ নম্বর: ' : 'Document Ref: '}
                 <strong className="text-aurum-gold">{passportId}</strong>
               </span>
             </div>
@@ -114,7 +114,7 @@ export default function GoldPassportPage() {
           <div className="flex flex-col sm:items-end space-y-1 text-xs font-mono">
             <Badge variant="emerald" size="sm">
               <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-              {language === 'bn' ? 'বিএফআইইউ ও বাজুস সার্টিফাইড' : 'BFIU Verified & Audited'}
+              {language === 'bn' ? 'বাজুস মানদণ্ড ও অডিট সমর্থিত' : 'BAJUS Aligned & Cryptographically Verified'}
             </Badge>
             <span className="text-aurum-text-dim text-[11px] pt-1">
               Issued: {issuedAt ? formatLocalizedDateTime(issuedAt) : 'Today'}
@@ -144,19 +144,19 @@ export default function GoldPassportPage() {
           </div>
 
           <div>
-            <span className="text-aurum-text-dim block text-[11px]">Vault Depository:</span>
+            <span className="text-aurum-text-dim block text-[11px]">Vault Depository Partner:</span>
             <span className="font-bold text-aurum-text text-sm mt-0.5 block">
-              Dhaka Central Vault
+              AurumSave Central Vault
             </span>
-            <span className="text-aurum-text-dim text-[10px]">Secured Bank Facility</span>
+            <span className="text-aurum-text-dim text-[10px]">Institutional Partner Facility</span>
           </div>
 
           <div>
-            <span className="text-aurum-text-dim block text-[11px]">Insurance Provider:</span>
+            <span className="text-aurum-text-dim block text-[11px]">Insurance & Security:</span>
             <span className="font-bold text-aurum-text text-sm mt-0.5 block">
-              Green Delta PLC
+              Underwritten Depository
             </span>
-            <span className="text-emerald-400 font-mono text-[10px]">100% Comprehensive Policy</span>
+            <span className="text-emerald-400 font-mono text-[10px]">Comprehensive Vault Policy</span>
           </div>
         </div>
 
@@ -172,7 +172,7 @@ export default function GoldPassportPage() {
             ≈ {toLocalizedDigits(totalBhori)} {language === 'bn' ? 'ভরি (১৬ আনা / ৯৬ রতি)' : 'Bhori (Tola)'} • 99.9% 24K Pure Allocated Bullion
           </div>
           <p className="text-xs text-aurum-text-muted max-w-lg mx-auto leading-relaxed pt-2">
-            This digital certificate affirms that the named client holds title to the specified weight in physical allocated bullion stored in verified high-security custody.
+            This digital certificate affirms that the named client holds title to the specified weight in digital allocated 24K gold bullion on the AurumSave platform ledger.
           </p>
         </div>
 
@@ -186,11 +186,11 @@ export default function GoldPassportPage() {
               {shaFingerprint}
             </div>
             <span className="text-[10px] text-aurum-text-muted block">
-              Server-verifiable via AurumSave Public Audit Registry
+              Server-verifiable via AurumSave Ledger Audit Engine
             </span>
           </div>
 
-          {/* Simulated QR Code Box */}
+          {/* QR Code Box */}
           <div className="flex items-center space-x-3 p-3 rounded-2xl bg-white text-aurum-midnight shrink-0 shadow-lg">
             <QrCode className="w-16 h-16" />
             <div className="text-[9px] leading-tight font-sans">
@@ -199,6 +199,16 @@ export default function GoldPassportPage() {
               <span className="block text-gray-500 font-mono">ID: {passportId.substring(0, 10)}</span>
             </div>
           </div>
+        </div>
+
+        {/* Legal & Regulatory Disclaimer Notice */}
+        <div className="p-4 rounded-xl bg-aurum-surface/40 border border-aurum-border/60 text-[11px] text-aurum-text-muted leading-relaxed">
+          <strong className="text-aurum-gold uppercase font-mono tracking-wider block text-[10px] mb-1">
+            {language === 'bn' ? 'আইনি ও নিয়ন্ত্রণকারী সতর্কবার্তা' : 'Legal & Regulatory Disclosure'}
+          </strong>
+          {language === 'bn'
+            ? 'এই ডিজিটাল গোল্ড পাসপোর্ট অরামসেভ প্ল্যাটফর্ম লেজারে সংরক্ষিত গ্রাহকের বরাদ্দকৃত ২৪ ক্যারেট স্বর্ণের ক্রিপ্টোগ্রাফিক রেকর্ড নির্দেশ করে। এটি ডিজিটাল প্ল্যাটফর্ম মালিকানা স্বত্ব নিশ্চিত করে। শারীরিক স্বর্ণ উত্তোলন ও হস্তান্তর অরামসেভ-এর টার্মস অফ সার্ভিস এবং অনুমোদিত অংশীদার ভল্ট ডিপোজিটরি চুক্তির অধীনে প্রযোজ্য। অরামসেভ একটি বেসরকারি ফিনটেক প্ল্যাটফর্ম এবং বাংলাদেশ ব্যাংক বা সরকারের কোনো অঙ্গসংস্থা নয়।'
+            : 'This Digital Gold Passport represents an authenticated cryptographic record of the customer\'s allocated 24K gold balance on the AurumSave platform ledger. It confirms title to digital ledger holdings. Physical bullion delivery and vault redemptions are subject to AurumSave Terms of Service and partner custody agreements. AurumSave Technologies is a private fintech enterprise and is not an agency of Bangladesh Bank or the Government of Bangladesh.'}
         </div>
       </div>
     </div>
