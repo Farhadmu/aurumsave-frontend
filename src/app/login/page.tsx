@@ -149,8 +149,8 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Fast Role Switcher (Development & Staging Testing Only - Strictly Hidden in Production) */}
-        {process.env.NODE_ENV !== 'production' && (
+        {/* Fast Role Switcher (Evaluation Accounts) */}
+        {process.env.NEXT_PUBLIC_DISABLE_DEMO_SWITCHER !== 'true' && (
           <div className="p-5 rounded-2xl bg-aurum-card/80 border border-aurum-border space-y-3">
             <div className="flex items-center space-x-2 text-xs font-bold text-aurum-text">
               <Key className="w-3.5 h-3.5 text-aurum-gold" />
