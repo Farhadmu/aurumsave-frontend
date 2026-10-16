@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
+import { useLanguage } from '../../lib/language-context';
 import { Role } from '../../shared';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -21,6 +22,7 @@ import {
 
 export default function RegisterPage() {
   const { register } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const [fullName, setFullName] = useState('');
@@ -50,12 +52,12 @@ export default function RegisterPage() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError('Vault passwords do not match. Please verify both inputs.');
+      setError(t('register.errPasswordMismatch'));
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters with numbers and symbols.');
+      setError(t('register.errPasswordShort'));
       return;
     }
 
@@ -88,10 +90,10 @@ export default function RegisterPage() {
             Au
           </div>
           <h1 className="font-serif-luxury text-3xl font-bold text-aurum-text tracking-tight">
-            Open Your Gold Vault
+            {t('register.title')}
           </h1>
           <p className="text-xs text-aurum-text-muted">
-            Start saving in 24K and 22K allocated gold bullion. Real physical custody.
+            {t('register.subtitle')}
           </p>
         </div>
 
@@ -107,7 +109,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-xs font-semibold text-aurum-text-muted block mb-1.5">
-                Full Legal Name <span className="text-aurum-gold">*</span>
+                {t('register.fullName')} <span className="text-aurum-gold">*</span>
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-aurum-text-dim absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -125,7 +127,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-semibold text-aurum-text-muted block mb-1.5">
-                  Email Address <span className="text-aurum-gold">*</span>
+                  {t('register.email')} <span className="text-aurum-gold">*</span>
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-aurum-text-dim absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -142,7 +144,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className="text-xs font-semibold text-aurum-text-muted block mb-1.5">
-                  Mobile Number (MFS)
+                  {t('register.phone')}
                 </label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-aurum-text-dim absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -160,7 +162,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-semibold text-aurum-text-muted block mb-1.5">
-                  Vault Password <span className="text-aurum-gold">*</span>
+                  {t('register.password')} <span className="text-aurum-gold">*</span>
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-aurum-text-dim absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -184,7 +186,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className="text-xs font-semibold text-aurum-text-muted block mb-1.5">
-                  Confirm Password <span className="text-aurum-gold">*</span>
+                  {t('register.confirmPassword')} <span className="text-aurum-gold">*</span>
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-aurum-text-dim absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -204,7 +206,7 @@ export default function RegisterPage() {
             {password && (
               <div className="space-y-1.5 pt-1">
                 <div className="flex justify-between items-center text-[10px]">
-                  <span className="text-aurum-text-muted">Password Security:</span>
+                  <span className="text-aurum-text-muted">{t('register.strength')}</span>
                   <span
                     className={`font-bold ${
                       strength <= 50
@@ -214,7 +216,7 @@ export default function RegisterPage() {
                         : 'text-emerald-400'
                     }`}
                   >
-                    {strength <= 50 ? 'Weak' : strength <= 75 ? 'Moderate' : 'Institutional-Grade'}
+                    {strength <= 50 ? t('register.strengthWeak') : strength <= 75 ? t('register.strengthModerate') : t('register.strengthStrong')}
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-aurum-surface rounded-full overflow-hidden border border-aurum-border">
@@ -236,10 +238,10 @@ export default function RegisterPage() {
             <div className="p-3.5 rounded-2xl bg-aurum-surface/60 border border-aurum-border text-[11px] text-aurum-text-muted space-y-1.5">
               <div className="flex items-center space-x-2 text-aurum-text font-semibold">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Zero Account Opening Fees • BAJUS Benchmark Rates</span>
+                <span>{t('register.complianceTitle')}</span>
               </div>
               <p className="leading-relaxed">
-                By creating a vault account, you agree to AurumSave&apos;s allocated custody terms and Bangladesh Bank AML/KYC guidelines.
+                {t('register.complianceTerms')}
               </p>
             </div>
 
@@ -250,14 +252,14 @@ export default function RegisterPage() {
               isLoading={isLoading}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Create Sovereign Gold Vault
+              {t('register.submit')}
             </Button>
           </form>
 
           <div className="text-center text-xs text-aurum-text-muted pt-2 border-t border-aurum-border">
-            Already have a bullion account?{' '}
+            {t('register.alreadyHave')}{' '}
             <a href="/login" className="text-aurum-gold hover:underline font-semibold ml-1">
-              Sign In to Vault
+              {t('register.signIn')}
             </a>
           </div>
         </div>

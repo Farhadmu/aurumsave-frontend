@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
+import { useLanguage } from '../../lib/language-context';
 import { apiRequest } from '../../lib/api';
 import {
   OrderType,
@@ -29,6 +30,7 @@ import {
 
 function TradeContent() {
   const { user, isLoading: authLoading } = useAuth();
+  const { t, formatLocalizedBDT, formatLocalizedGold, toLocalizedDigits, language } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -185,15 +187,15 @@ function TradeContent() {
       <div>
         <div className="flex items-center space-x-2 mb-1.5">
           <Badge variant="gold" pulse size="sm">
-            5-Minute Guaranteed Rate Lock
+            {t('trade.rateLock')}
           </Badge>
-          <span className="text-xs text-aurum-text-dim">• Zero Slippage</span>
+          <span className="text-xs text-aurum-text-dim">• {t('trade.zeroSlippage')}</span>
         </div>
         <h1 className="font-serif-luxury text-3xl sm:text-4xl font-bold text-aurum-text">
-          {orderType === OrderType.BUY ? 'Physical Bullion Trade Desk' : 'Instant Gold Liquidation'}
+          {orderType === OrderType.BUY ? t('trade.buyTitle') : t('trade.sellTitle')}
         </h1>
         <p className="text-xs sm:text-sm text-aurum-text-muted mt-1 max-w-2xl">
-          Lock verified BAJUS benchmark rates for 300 seconds. Transactions are guaranteed by allocated bank vault reserves.
+          {t('trade.deskSubtitle')}
         </p>
       </div>
 
@@ -209,9 +211,9 @@ function TradeContent() {
           <div className="flex items-center space-x-2.5">
             <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
             <div>
-              <span className="font-bold block">Emergency Security Lockdown Active</span>
+              <span className="font-bold block">{t('trade.emergencyLockActive')}</span>
               <span className="text-[11px] text-rose-300">
-                Gold orders and liquidation are halted while account is frozen.
+                {t('trade.emergencyLockNotice')}
               </span>
             </div>
           </div>
@@ -219,7 +221,7 @@ function TradeContent() {
             href="/security"
             className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shrink-0 shadow transition-all"
           >
-            Security Center
+            {t('nav.security')}
           </a>
         </div>
       )}
@@ -243,7 +245,7 @@ function TradeContent() {
                 }`}
               >
                 <Coins className="w-4 h-4" />
-                <span>Buy Physical Bullion</span>
+                <span>{t('trade.btnBuy')}</span>
               </button>
               <button
                 type="button"
@@ -258,14 +260,14 @@ function TradeContent() {
                 }`}
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>Liquidate into Taka</span>
+                <span>{t('trade.btnSell')}</span>
               </button>
             </div>
 
             {/* Purity Selection */}
             <div>
               <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block mb-2">
-                Purity Standard
+                {t('trade.puritySelect')}
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -281,10 +283,10 @@ function TradeContent() {
                   }`}
                 >
                   <span className="font-serif-luxury font-bold text-base text-aurum-gold block">
-                    24K Bullion
+                    {language === 'bn' ? '২৪ ক্যারেট বার' : '24K Bullion'}
                   </span>
                   <span className="text-[11px] text-aurum-text-muted">
-                    99.9% Pure Investment Gold
+                    {t('trade.k24desc')}
                   </span>
                 </button>
 
@@ -301,10 +303,10 @@ function TradeContent() {
                   }`}
                 >
                   <span className="font-serif-luxury font-bold text-base text-aurum-text block">
-                    22K Hallmark
+                    {language === 'bn' ? '২২ ক্যারেট হলমার্ক' : '22K Hallmark'}
                   </span>
                   <span className="text-[11px] text-aurum-text-muted">
-                    91.6% Hallmark Standard
+                    {t('trade.k22desc')}
                   </span>
                 </button>
               </div>
@@ -314,7 +316,7 @@ function TradeContent() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim">
-                  Amount to {orderType === OrderType.BUY ? 'Invest' : 'Liquidate'}
+                  {t('trade.amountTo')} {orderType === OrderType.BUY ? t('trade.invest') : t('trade.liquidate')}
                 </label>
                 <div className="flex rounded-xl bg-aurum-surface p-0.5 border border-aurum-border text-[11px] font-semibold">
                   <button
@@ -340,7 +342,7 @@ function TradeContent() {
                         : 'text-aurum-text-muted'
                     }`}
                   >
-                    Grams (g)
+                    {language === 'bn' ? 'গ্রাম (g)' : 'Grams (g)'}
                   </button>
                 </div>
               </div>
@@ -367,7 +369,7 @@ function TradeContent() {
             {orderType === OrderType.BUY && (
               <div>
                 <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block mb-2">
-                  Payment Gateway
+                  {t('trade.paymentMethod')}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
@@ -386,7 +388,7 @@ function TradeContent() {
                       }`}
                     >
                       <span className={`block font-bold text-xs ${gw.color}`}>{gw.label}</span>
-                      <span className="text-[10px] text-aurum-text-dim">Zero Surcharge</span>
+                      <span className="text-[10px] text-aurum-text-dim">{t('trade.zeroSurcharge')}</span>
                     </button>
                   ))}
                 </div>
@@ -397,13 +399,13 @@ function TradeContent() {
             {orderType === OrderType.SELL && (
               <div className="p-4 rounded-2xl bg-aurum-surface/60 border border-aurum-border space-y-3">
                 <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block">
-                  Payout Disbursement Destination
+                  {t('trade.payoutDest')}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: 'BKASH', label: 'bKash Wallet' },
-                    { id: 'NAGAD', label: 'Nagad Wallet' },
-                    { id: 'BANK', label: 'Bank Transfer' },
+                    { id: 'BKASH', label: t('trade.payoutBkash') },
+                    { id: 'NAGAD', label: t('trade.payoutNagad') },
+                    { id: 'BANK', label: t('trade.payoutBank') },
                   ].map((dest) => (
                     <button
                       key={dest.id}
@@ -425,8 +427,8 @@ function TradeContent() {
                     type="text"
                     placeholder={
                       payoutType === 'BANK'
-                        ? 'Bank Account Number'
-                        : `${payoutType} Mobile Number (e.g. 01700000000)`
+                        ? t('trade.accountPlaceholder')
+                        : t('trade.mobilePlaceholder')
                     }
                     value={payoutNumber}
                     onChange={(e) => setPayoutNumber(e.target.value)}
@@ -438,14 +440,14 @@ function TradeContent() {
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <input
                       type="text"
-                      placeholder="Bank Name (e.g. City Bank)"
+                      placeholder={t('trade.bankNamePlaceholder')}
                       value={payoutBankName}
                       onChange={(e) => setPayoutBankName(e.target.value)}
                       className="px-3 py-2 rounded-xl bg-aurum-card border border-aurum-border text-xs text-aurum-text focus:border-aurum-gold/60 focus:outline-none"
                     />
                     <input
                       type="text"
-                      placeholder="Routing Number"
+                      placeholder={t('trade.routingPlaceholder')}
                       value={payoutRoutingNumber}
                       onChange={(e) => setPayoutRoutingNumber(e.target.value)}
                       className="px-3 py-2 rounded-xl bg-aurum-card border border-aurum-border text-xs text-aurum-text focus:border-aurum-gold/60 focus:outline-none"
@@ -453,7 +455,9 @@ function TradeContent() {
                   </div>
                 )}
                 <span className="text-[11px] text-aurum-text-dim block">
-                  Gold will be safely placed into vault escrow until payout disbursement is authorized and completed by Operations.
+                  {language === 'bn'
+                    ? 'টাকা ওয়ালেটে জমা হওয়া পর্যন্ত স্বর্ণ নিরাপদে এসক্রোতে সংরক্ষিত থাকবে।'
+                    : 'Gold will be safely placed into vault escrow until payout disbursement is authorized and completed by Operations.'}
                 </span>
               </div>
             )}
@@ -467,7 +471,9 @@ function TradeContent() {
                 onClick={handleGetQuote}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
-                {isQuoting ? 'Connecting to BAJUS Oracle...' : 'Generate 5-Minute Guaranteed Quote'}
+                {isQuoting
+                  ? language === 'bn' ? 'বাজুস লাইভ দরের সাথে যুক্ত হচ্ছে...' : 'Connecting to BAJUS Oracle...'
+                  : t('trade.requestQuote')}
               </Button>
             ) : (
               <Button
@@ -477,7 +483,7 @@ function TradeContent() {
                 className="w-full"
                 onClick={handleGetQuote}
               >
-                Refresh Live Quote
+                {language === 'bn' ? 'নতুন লাইভ দর নিন' : 'Refresh Live Quote'}
               </Button>
             )}
           </div>
@@ -488,7 +494,7 @@ function TradeContent() {
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-aurum-border">
               <span className="text-xs uppercase font-mono font-bold tracking-wider text-aurum-text-dim">
-                Audited Quote Summary
+                {t('trade.breakdown.title')}
               </span>
               {quote && (
                 <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-aurum-gold/15 border border-aurum-gold/30 text-aurum-gold text-xs font-mono font-bold">
@@ -502,43 +508,45 @@ function TradeContent() {
               <div className="space-y-5 pt-4">
                 <div>
                   <span className="text-[11px] text-aurum-text-dim block uppercase font-mono">
-                    {orderType === OrderType.BUY ? 'Physical Vault Allocation' : 'Weight Liquidated'}
+                    {orderType === OrderType.BUY ? t('trade.breakdown.goldWeight') : t('trade.pureWeight')}
                   </span>
                   <div className="text-4xl font-mono font-black text-aurum-gold mt-1">
-                    {quote.weightGrams}g
+                    {formatLocalizedGold(quote.weightGrams)}
                   </div>
                   <span className="text-xs text-aurum-text-muted mt-0.5 block font-mono">
-                    ({quote.purity} Gold • {(quote.weightGrams / CONVERSIONS.GRAMS_PER_BHORI).toFixed(3)} Bhori)
+                    ({quote.purity} Gold • {toLocalizedDigits((quote.weightGrams / CONVERSIONS.GRAMS_PER_BHORI).toFixed(3))} {language === 'bn' ? 'ভরি' : 'Bhori'})
                   </span>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-aurum-border text-xs">
                   <div className="flex justify-between text-aurum-text-muted">
-                    <span>Benchmark Rate:</span>
-                    <span className="font-mono text-aurum-text">{formatBDT(quote.ratePerGramBdt)}/g</span>
+                    <span>{t('trade.breakdown.benchmark')}:</span>
+                    <span className="font-mono text-aurum-text">{formatLocalizedBDT(quote.ratePerGramBdt)}/g</span>
                   </div>
                   <div className="flex justify-between text-aurum-text-muted">
-                    <span>Subtotal:</span>
-                    <span className="font-mono text-aurum-text">{formatBDT(quote.subtotalBdt)}</span>
+                    <span>{t('trade.breakdown.pureMetal')}:</span>
+                    <span className="font-mono text-aurum-text">{formatLocalizedBDT(quote.subtotalBdt)}</span>
                   </div>
                   <div className="flex justify-between text-aurum-text-muted">
-                    <span>Assay & Platform Fee:</span>
-                    <span className="font-mono text-aurum-text">{formatBDT(quote.platformFeeBdt)}</span>
+                    <span>{t('trade.breakdown.platformFee')}:</span>
+                    <span className="font-mono text-aurum-text">{formatLocalizedBDT(quote.platformFeeBdt)}</span>
                   </div>
                   <div className="flex justify-between text-aurum-text-muted">
-                    <span>Vault Custody & Insurance:</span>
-                    <span className="text-emerald-400 font-bold uppercase text-[10px]">Included (Bank Insured)</span>
+                    <span>{t('trade.breakdown.vaultCustody')}:</span>
+                    <span className="text-emerald-400 font-bold uppercase text-[10px]">
+                      {language === 'bn' ? 'বিনামূল্যে (ব্যাংক বীমাকৃত)' : 'Included (Bank Insured)'}
+                    </span>
                   </div>
                   <div className="flex justify-between text-base font-bold text-aurum-text pt-3 border-t border-aurum-border">
-                    <span>{orderType === OrderType.BUY ? 'Total Payable:' : 'Liquidated Payout:'}</span>
-                    <span className="font-mono text-aurum-gold text-xl">{formatBDT(quote.totalBdt)}</span>
+                    <span>{t('trade.breakdown.totalPayable')}:</span>
+                    <span className="font-mono text-aurum-gold text-xl">{formatLocalizedBDT(quote.totalBdt)}</span>
                   </div>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-aurum-surface border border-aurum-border text-xs text-aurum-text-muted flex items-start space-x-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <span>
-                    Price lock is guaranteed for 300 seconds. No slippage will occur upon payment completion.
+                    {t('trade.rateLockNotice')}
                   </span>
                 </div>
               </div>
@@ -546,7 +554,9 @@ function TradeContent() {
               <div className="py-20 text-center text-aurum-text-muted text-xs space-y-3">
                 <Coins className="w-12 h-12 text-aurum-gold mx-auto opacity-30" />
                 <p>
-                  Configure your investment parameters and generate a quote to lock your guaranteed market price.
+                  {language === 'bn'
+                    ? 'আপনার কাঙ্ক্ষিত টাকার অংক বা স্বর্ণের পরিমাণ লিখুন এবং ৫ মিনিটের গ্যারান্টিযুক্ত রেট লক পেতে কোট নিন।'
+                    : 'Configure your investment parameters and generate a quote to lock your guaranteed market price.'}
                 </p>
               </div>
             )}
@@ -561,7 +571,9 @@ function TradeContent() {
                 onClick={handleConfirmOrder}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
-                Confirm & Proceed to {orderType === OrderType.BUY ? 'bKash/Nagad Payment' : 'Wallet'}
+                {orderType === OrderType.BUY
+                  ? t('trade.executeBuy')
+                  : t('trade.executeSell')}
               </Button>
             </div>
           )}

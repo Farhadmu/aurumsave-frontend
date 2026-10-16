@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
+import { useLanguage } from '../../lib/language-context';
 import { apiRequest } from '../../lib/api';
 import { TicketStatus, TicketPriority } from '@aurumsave/shared';
 import {
@@ -29,6 +30,7 @@ import { formatDateTime } from '../../lib/utils';
 
 export default function SupportPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const { t, formatLocalizedDateTime, language } = useLanguage();
   const router = useRouter();
 
   const [tickets, setTickets] = useState<any[]>([]);
@@ -216,11 +218,11 @@ export default function SupportPage() {
               <Headphones className="w-5 h-5" />
             </span>
             <h1 className="font-serif text-3xl font-bold text-aurum-text tracking-tight">
-              Customer Support Desk
+              {t('support.title')}
             </h1>
           </div>
           <p className="text-xs text-aurum-text-muted">
-            Dedicated concierge support for bullion allocations, MFS gateway settlements, and vault custody.
+            {t('support.subtitle')}
           </p>
         </div>
 
@@ -230,7 +232,7 @@ export default function SupportPage() {
             onClick={() => setIsModalOpen(true)}
             leftIcon={<Plus className="w-4 h-4" />}
           >
-            Open New Inquiry
+            {t('support.createTicket')}
           </Button>
         </div>
       </div>
@@ -247,7 +249,7 @@ export default function SupportPage() {
               <Search className="w-3.5 h-3.5 text-aurum-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search ticket ID or subject..."
+                placeholder={language === 'bn' ? 'টিকিট আইডি বা বিষয় লিখুন...' : 'Search ticket ID or subject...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 rounded-xl bg-aurum-navy/50 border border-aurum-border text-xs text-aurum-text placeholder-aurum-text-muted focus:border-aurum-gold focus:outline-none transition-colors"
@@ -265,7 +267,11 @@ export default function SupportPage() {
                       : 'bg-aurum-surface text-aurum-text-muted border-aurum-border hover:border-aurum-gold/30'
                   }`}
                 >
-                  {st}
+                  {st === 'ALL'
+                    ? t('common.all')
+                    : st === TicketStatus.OPEN
+                    ? t('common.active')
+                    : t('common.completed')}
                 </button>
               ))}
             </div>

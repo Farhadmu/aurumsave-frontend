@@ -1,8 +1,13 @@
+'use client';
+
 import React from 'react';
 import { ShieldCheck, Lock, Award, HeartHandshake, ExternalLink } from 'lucide-react';
+import { useLanguage } from '../lib/language-context';
 import { Badge } from './ui/Badge';
 
 export default function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className="bg-aurum-card border-t border-aurum-border text-aurum-text-muted text-sm pt-16 pb-12 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -13,9 +18,9 @@ export default function Footer() {
               <Award className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-aurum-text text-sm">BAJUS Benchmark</h4>
+              <h4 className="font-bold text-aurum-text text-sm">{t('footer.bajusTitle')}</h4>
               <p className="text-xs text-aurum-text-muted mt-0.5">
-                Daily rates aligned with the Bangladesh Jewellers Association standard.
+                {t('footer.bajusDesc')}
               </p>
             </div>
           </div>
@@ -25,9 +30,9 @@ export default function Footer() {
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-aurum-text text-sm">Allocated Bullion</h4>
+              <h4 className="font-bold text-aurum-text text-sm">{t('footer.allocatedTitle')}</h4>
               <p className="text-xs text-aurum-text-muted mt-0.5">
-                100% physically backed by 24K & 22K certified gold in bank-grade vaults.
+                {t('footer.allocatedDesc')}
               </p>
             </div>
           </div>
@@ -37,9 +42,9 @@ export default function Footer() {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-aurum-text text-sm">BFIU AML Compliance</h4>
+              <h4 className="font-bold text-aurum-text text-sm">{t('footer.bfiuTitle')}</h4>
               <p className="text-xs text-aurum-text-muted mt-0.5">
-                Strict KYC verification & double-entry financial ledger for every gram.
+                {t('footer.bfiuDesc')}
               </p>
             </div>
           </div>
@@ -49,9 +54,9 @@ export default function Footer() {
               <HeartHandshake className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-aurum-text text-sm">Instant MFS Liquidity</h4>
+              <h4 className="font-bold text-aurum-text text-sm">{t('footer.mfsTitle')}</h4>
               <p className="text-xs text-aurum-text-muted mt-0.5">
-                Liquidate anytime with instant payout to bKash, Nagad, Rocket, or Bank.
+                {t('footer.mfsDesc')}
               </p>
             </div>
           </div>
@@ -69,42 +74,41 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-xs text-aurum-text-muted max-w-sm leading-relaxed">
-              AurumSave is Bangladesh&apos;s premier digital gold savings architecture. We enable micro-savings starting from 100 milligrams (or ৳500) backed by allocated, audited physical bullion.
+              {t('footer.brandDesc')}
             </p>
             <p className="text-[11px] text-aurum-text-dim">
-              Headquarters: Gulshan Avenue, Dhaka-1212, Bangladesh.<br />
-              Commercial Registry & Vault Custody Underwriters: Lloyd&apos;s Syndicate.
+              {t('footer.hq')}
             </p>
           </div>
 
           <div>
             <h5 className="font-bold text-aurum-text text-xs uppercase font-mono tracking-wider mb-4">
-              Platform
+              {t('footer.platform')}
             </h5>
             <ul className="space-y-2 text-xs">
               <li>
                 <a href="/#rates" className="hover:text-aurum-gold transition-colors">
-                  Live BAJUS Rates
+                  {t('hero.liveBajusBadge')}
                 </a>
               </li>
               <li>
                 <a href="/#calculator" className="hover:text-aurum-gold transition-colors">
-                  Savings Calculator
+                  {t('nav.calculator')}
                 </a>
               </li>
               <li>
                 <a href="/trade" className="hover:text-aurum-gold transition-colors">
-                  Trade Desk (5m Lock)
+                  {t('nav.trade')}
                 </a>
               </li>
               <li>
-                <a href="/#vault" className="hover:text-aurum-gold transition-colors">
-                  Vault Storage
+                <a href="/dashboard" className="hover:text-aurum-gold transition-colors">
+                  {t('nav.dashboard')}
                 </a>
               </li>
               <li>
-                <a href="/#how-it-works" className="hover:text-aurum-gold transition-colors">
-                  Physical Delivery
+                <a href="/academy" className="hover:text-aurum-gold transition-colors">
+                  {t('nav.academy')}
                 </a>
               </li>
             </ul>
@@ -112,32 +116,27 @@ export default function Footer() {
 
           <div>
             <h5 className="font-bold text-aurum-text text-xs uppercase font-mono tracking-wider mb-4">
-              Governance
+              {t('footer.governance')}
             </h5>
             <ul className="space-y-2 text-xs">
               <li>
                 <a href="/#faq" className="hover:text-aurum-gold transition-colors">
-                  BFIU AML/CFT Policy
+                  {t('nav.faq')}
                 </a>
               </li>
               <li>
-                <a href="/#faq" className="hover:text-aurum-gold transition-colors">
-                  Vault Custody Terms
+                <a href="/security" className="hover:text-aurum-gold transition-colors">
+                  {t('nav.security')}
                 </a>
               </li>
               <li>
-                <a href="/#faq" className="hover:text-aurum-gold transition-colors">
-                  BAJUS Synchronization
-                </a>
-              </li>
-              <li>
-                <a href="/#faq" className="hover:text-aurum-gold transition-colors">
-                  Proof of Reserves
+                <a href="/kyc" className="hover:text-aurum-gold transition-colors">
+                  {t('kyc.title')}
                 </a>
               </li>
               <li>
                 <a href="/support" className="hover:text-aurum-gold transition-colors">
-                  Support Concierge
+                  {t('nav.support')}
                 </a>
               </li>
             </ul>
@@ -145,7 +144,7 @@ export default function Footer() {
 
           <div>
             <h5 className="font-bold text-aurum-text text-xs uppercase font-mono tracking-wider mb-4">
-              Supported Payment MFS
+              {t('footer.payments')}
             </h5>
             <div className="flex flex-wrap gap-2">
               <span className="px-2.5 py-1 rounded-lg bg-aurum-surface border border-aurum-border text-[11px] font-mono font-bold text-pink-400">
@@ -163,7 +162,7 @@ export default function Footer() {
             </div>
             <div className="mt-4 flex items-center space-x-1.5 text-[11px]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-400 font-semibold">Core Ledger: Operational</span>
+              <span className="text-emerald-400 font-semibold">{t('footer.coreLedgerStatus')}</span>
             </div>
           </div>
         </div>
@@ -171,9 +170,9 @@ export default function Footer() {
         {/* Regulatory Disclaimer */}
         <div className="pt-8 border-t border-aurum-border/40 text-center text-[11px] text-aurum-text-dim space-y-2">
           <p>
-            Legal Notice: Digital gold purchases through AurumSave are backed 100% by physically segregated bullion in bank vaults. Gold prices fluctuate based on domestic BAJUS market factors.
+            {t('footer.legal')}
           </p>
-          <p>© {new Date().getFullYear()} AurumSave Technologies Bangladesh Ltd. All rights reserved.</p>
+          <p>{t('footer.rights', { year: new Date().getFullYear() })}</p>
         </div>
       </div>
     </footer>

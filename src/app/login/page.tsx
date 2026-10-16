@@ -15,9 +15,11 @@ import {
   Sparkles,
   Key,
 } from 'lucide-react';
+import { useLanguage } from '../../lib/language-context';
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { language, t } = useLanguage();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
@@ -79,10 +81,12 @@ export default function LoginPage() {
             Au
           </div>
           <h1 className="font-serif-luxury text-3xl font-bold text-aurum-text">
-            Sign In to AurumSave
+            {language === 'bn' ? 'ভল্ট অ্যাকাউন্টে লগইন করুন' : 'Sign In to AurumSave'}
           </h1>
           <p className="text-xs text-aurum-text-muted">
-            Access your sovereign bullion vault & allocated portfolio
+            {language === 'bn'
+              ? 'আপনার সার্বভৌম ভল্ট পোর্টফোলিওতে সুরক্ষিত প্রবেশ করুন'
+              : 'Access your sovereign bullion vault & allocated portfolio'}
           </p>
         </div>
 
@@ -98,7 +102,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-xs font-semibold text-aurum-text-muted block mb-1.5">
-                Email Address
+                {language === 'bn' ? 'ইমেইল অ্যাড্রেস' : 'Email Address'}
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-aurum-text-dim absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -115,7 +119,7 @@ export default function LoginPage() {
 
             <div>
               <label className="text-xs font-semibold text-aurum-text-muted block mb-1.5">
-                Password
+                {language === 'bn' ? 'গোপন পাসওয়ার্ড' : 'Password'}
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-aurum-text-dim absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -137,14 +141,14 @@ export default function LoginPage() {
               isLoading={isLoading}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Authenticate & Unlock Vault
+              {language === 'bn' ? 'ভল্ট আনলক করুন' : 'Authenticate & Unlock Vault'}
             </Button>
           </form>
 
           <div className="text-center text-xs text-aurum-text-muted pt-2 border-t border-aurum-border">
-            Don&apos;t have a bullion account yet?{' '}
+            {language === 'bn' ? 'এখনও অ্যাকাউন্ট নেই?' : "Don't have a bullion account yet?"}{' '}
             <a href="/register" className="text-aurum-gold hover:underline font-semibold ml-1">
-              Register Free
+              {language === 'bn' ? 'নতুন অ্যাকাউন্ট খুলুন' : 'Register Free'}
             </a>
           </div>
         </div>

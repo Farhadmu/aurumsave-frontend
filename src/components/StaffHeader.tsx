@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '../lib/auth-context';
+import { useLanguage } from '../lib/language-context';
 import { Role } from '../shared';
 import { Badge } from './ui/Badge';
 import {
@@ -24,37 +25,38 @@ export default function StaffHeader({
   subtitle: string;
 }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const pathname = usePathname();
 
   const isSuperAdmin = user?.role === Role.SUPER_ADMIN || user?.role === Role.ADMIN;
 
   const links = [
     {
-      name: 'Executive Admin',
+      name: t('staff.nav.admin'),
       href: '/staff/admin',
       icon: Users,
       visible: isSuperAdmin,
     },
     {
-      name: 'BFIU Compliance',
+      name: t('staff.nav.compliance'),
       href: '/staff/compliance',
       icon: FileCheck2,
       visible: isSuperAdmin || user?.role === Role.KYC_OFFICER,
     },
     {
-      name: 'Treasury & Operations',
+      name: t('staff.nav.operations'),
       href: '/staff/operations',
       icon: Scale,
       visible: isSuperAdmin || user?.role === Role.FINANCE_OFFICER,
     },
     {
-      name: 'Support Desk',
+      name: t('staff.nav.support'),
       href: '/staff/support',
       icon: Headphones,
       visible: isSuperAdmin || user?.role === Role.SUPPORT_AGENT,
     },
     {
-      name: 'Cryptographic Audit',
+      name: t('staff.nav.auditor'),
       href: '/staff/auditor',
       icon: FileSearch,
       visible: isSuperAdmin || user?.role === Role.AUDITOR,
@@ -66,20 +68,20 @@ export default function StaffHeader({
       {/* Top Breadcrumb & Status */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-2 text-xs font-mono text-aurum-text-dim">
-          <span className="uppercase font-bold text-aurum-gold">AurumSave Operations</span>
+          <span className="uppercase font-bold text-aurum-gold">{t('staff.header.ops')}</span>
           <ChevronRight className="w-3.5 h-3.5" />
           <span className="text-aurum-text-muted">{user?.role}</span>
         </div>
 
         <div className="flex items-center space-x-2">
           <Badge variant="emerald" pulse size="sm">
-            Core Engine Live
+            {t('staff.header.coreLive')}
           </Badge>
           <a
             href="/dashboard"
             className="text-xs text-aurum-text-muted hover:text-aurum-gold transition-colors inline-flex items-center space-x-1"
           >
-            <span>Customer View</span>
+            <span>{t('staff.header.customerView')}</span>
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>

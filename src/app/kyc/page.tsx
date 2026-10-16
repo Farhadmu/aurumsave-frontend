@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
+import { useLanguage } from '../../lib/language-context';
 import { apiRequest } from '../../lib/api';
 import { KycStatus, KycDocumentType } from '../../shared';
 import { Badge } from '../../components/ui/Badge';
@@ -23,6 +24,7 @@ import {
 
 export default function KycPage() {
   const { user, refreshUser, isLoading: authLoading } = useAuth();
+  const { t, language } = useLanguage();
   const router = useRouter();
 
   const [statusData, setStatusData] = useState<any>(null);
@@ -160,15 +162,15 @@ export default function KycPage() {
       <div>
         <div className="flex items-center space-x-2 mb-1.5">
           <Badge variant="emerald" size="sm">
-            BFIU AML/CFT Standards
+            {language === 'bn' ? 'বিএফআইইউ এএমএল/সিএফটি মানদণ্ড' : 'BFIU AML/CFT Standards'}
           </Badge>
-          <span className="text-xs text-aurum-text-dim">• Sovereign Compliance</span>
+          <span className="text-xs text-aurum-text-dim">• {language === 'bn' ? 'সার্বভৌম কমপ্লায়েন্স' : 'Sovereign Compliance'}</span>
         </div>
         <h1 className="font-serif-luxury text-3xl sm:text-4xl font-bold text-aurum-text">
-          Identity Verification (KYC)
+          {t('kyc.title')}
         </h1>
         <p className="text-xs sm:text-sm text-aurum-text-muted mt-1 max-w-xl">
-          Compliant with Bangladesh Financial Intelligence Unit (BFIU) guidelines to protect your physical bullion property rights.
+          {t('kyc.subtitle')}
         </p>
       </div>
 
@@ -195,21 +197,21 @@ export default function KycPage() {
             </div>
             <div>
               <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-aurum-text-dim">
-                Verification Tier
+                {language === 'bn' ? 'যাচাইকরণ টিয়ার' : 'Verification Tier'}
               </span>
               <h3 className="font-serif-luxury text-lg font-bold text-aurum-text">
                 {currentStatus === KycStatus.APPROVED
-                  ? 'Level 1 Verified (Full Physical Vault Privileges)'
+                  ? language === 'bn' ? 'লেভেল ১ যাচাইকৃত (সম্পূর্ণ ভল্ট সুবিধা সক্রিয়)' : 'Level 1 Verified (Full Physical Vault Privileges)'
                   : currentStatus === KycStatus.PENDING_REVIEW
-                  ? 'Compliance Review In Progress'
-                  : 'Unverified Tier (Action Required)'}
+                  ? language === 'bn' ? 'কমপ্লায়েন্স যাচাই প্রক্রিয়াধীন' : 'Compliance Review In Progress'
+                  : language === 'bn' ? 'যাচাইহীন অ্যাকাউন্ট (পদক্ষেপ প্রয়োজন)' : 'Unverified Tier (Action Required)'}
               </h3>
               <p className="text-xs text-aurum-text-muted mt-0.5">
                 {currentStatus === KycStatus.APPROVED
-                  ? 'Your identity is verified. You can withdraw physical gold bullion and trade without limits.'
+                  ? language === 'bn' ? 'আপনার পরিচয় সফলভাবে যাচাই করা হয়েছে। আপনি শারীরিক গোল্ড বার উত্তোলন করতে পারবেন।' : 'Your identity is verified. You can withdraw physical gold bullion and trade without limits.'
                   : currentStatus === KycStatus.PENDING_REVIEW
-                  ? 'Your submission is in the compliance queue. Review typically completes within 2 to 4 business hours.'
-                  : 'Please submit your National ID (Smart NID) or Passport below.'}
+                  ? language === 'bn' ? 'আপনার আবেদনটি কমপ্লায়েন্স কিউতে রয়েছে। সাধারণত ২ থেকে ৪ ঘণ্টার মধ্যে যাচাই সম্পন্ন হয়।' : 'Your submission is in the compliance queue. Review typically completes within 2 to 4 business hours.'
+                  : language === 'bn' ? 'অনুগ্রহ করে নিচে আপনার স্মার্ট এনআইডি বা পাসপোর্ট নম্বর ও স্ক্যান জমা দিন।' : 'Please submit your National ID (Smart NID) or Passport below.'}
               </p>
             </div>
           </div>
@@ -224,7 +226,11 @@ export default function KycPage() {
             }
             size="md"
           >
-            {currentStatus}
+            {currentStatus === KycStatus.APPROVED
+              ? t('kyc.status.approved')
+              : currentStatus === KycStatus.PENDING_REVIEW
+              ? t('kyc.status.pending')
+              : t('kyc.status.rejected')}
           </Badge>
         </div>
       </Card>
@@ -248,7 +254,7 @@ export default function KycPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block mb-2">
-                Identity Document Type
+                {t('kyc.docType')}
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -260,8 +266,12 @@ export default function KycPage() {
                       : 'bg-aurum-surface/40 border-aurum-border text-aurum-text-muted'
                   }`}
                 >
-                  <span className="font-bold text-sm text-aurum-text block">Smart NID</span>
-                  <span className="text-[11px] text-aurum-text-dim">10 or 17 Digit National ID</span>
+                  <span className="font-bold text-sm text-aurum-text block">
+                    {language === 'bn' ? 'স্মার্ট এনআইডি' : 'Smart NID'}
+                  </span>
+                  <span className="text-[11px] text-aurum-text-dim">
+                    {language === 'bn' ? '১০ বা ১৭ ডিজিটের জাতীয় পরিচয়পত্র' : '10 or 17 Digit National ID'}
+                  </span>
                 </button>
 
                 <button
@@ -273,15 +283,19 @@ export default function KycPage() {
                       : 'bg-aurum-surface/40 border-aurum-border text-aurum-text-muted'
                   }`}
                 >
-                  <span className="font-bold text-sm text-aurum-text block">Passport</span>
-                  <span className="text-[11px] text-aurum-text-dim">Bangladesh E-Passport / MRP</span>
+                  <span className="font-bold text-sm text-aurum-text block">
+                    {language === 'bn' ? 'পাসপোর্ট' : 'Passport'}
+                  </span>
+                  <span className="text-[11px] text-aurum-text-dim">
+                    {language === 'bn' ? 'বাংলাদেশ ই-পাসপোর্ট বা এমআরপি' : 'Bangladesh E-Passport / MRP'}
+                  </span>
                 </button>
               </div>
             </div>
 
             <div>
               <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block mb-2">
-                {idType === 'SMART_NID' ? 'Smart NID Number' : 'Passport Number'}
+                {t('kyc.docNumber')}
               </label>
               <input
                 type="text"
@@ -297,7 +311,7 @@ export default function KycPage() {
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs space-y-1">
                 <span className="font-bold flex items-center space-x-1">
                   <AlertCircle className="w-4 h-4 mr-1 shrink-0" />
-                  Compliance Feedback & Correction Required:
+                  {language === 'bn' ? 'কমপ্লায়েন্স আপত্তি ও সংশোধনের নির্দেশ:' : 'Compliance Feedback & Correction Required:'}
                 </span>
                 <p className="text-aurum-text-muted">
                   {statusData.latestApplication.rejectionReason}
@@ -308,7 +322,7 @@ export default function KycPage() {
             {/* Document Scans Upload Area */}
             <div className="space-y-3">
               <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block">
-                Attach Document Scans (JPG, PNG, or PDF - Max 5MB)
+                {language === 'bn' ? 'ডকুমেন্টের স্পষ্ট ছবি বা স্ক্যান কপি (JPG, PNG বা PDF)' : 'Attach Document Scans (JPG, PNG, or PDF - Max 5MB)'}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label className="p-6 rounded-2xl border-2 border-dashed border-aurum-border hover:border-aurum-gold/60 text-center space-y-2 bg-aurum-surface/30 cursor-pointer transition-all block">
@@ -324,10 +338,10 @@ export default function KycPage() {
                   />
                   <Upload className="w-6 h-6 text-aurum-gold mx-auto" />
                   <p className="text-xs font-bold text-aurum-text">
-                    {frontFile ? frontFile.name : 'Front Face of Document'}
+                    {frontFile ? frontFile.name : t('kyc.front')}
                   </p>
                   <p className="text-[10px] text-aurum-text-dim">
-                    {frontFile ? `${(frontFile.size / 1024).toFixed(1)} KB selected` : 'Click to browse JPG, PNG or PDF'}
+                    {frontFile ? `${(frontFile.size / 1024).toFixed(1)} KB selected` : (language === 'bn' ? 'ফাইল সিলেক্ট করতে ক্লিক করুন' : 'Click to browse JPG, PNG or PDF')}
                   </p>
                 </label>
 
@@ -344,10 +358,10 @@ export default function KycPage() {
                   />
                   <Upload className="w-6 h-6 text-aurum-gold mx-auto" />
                   <p className="text-xs font-bold text-aurum-text">
-                    {backFile ? backFile.name : 'Back Face / Address'}
+                    {backFile ? backFile.name : t('kyc.back')}
                   </p>
                   <p className="text-[10px] text-aurum-text-dim">
-                    {backFile ? `${(backFile.size / 1024).toFixed(1)} KB selected` : 'Click to browse JPG, PNG or PDF'}
+                    {backFile ? `${(backFile.size / 1024).toFixed(1)} KB selected` : (language === 'bn' ? 'ফাইল সিলেক্ট করতে ক্লিক করুন' : 'Click to browse JPG, PNG or PDF')}
                   </p>
                 </label>
               </div>
@@ -360,7 +374,7 @@ export default function KycPage() {
               isLoading={isSubmitting}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Submit for BFIU Compliance Verification
+              {language === 'bn' ? 'বিএফআইইউ যাচাইয়ের জন্য জমা দিন' : 'Submit for BFIU Compliance Verification'}
             </Button>
           </form>
         </Card>

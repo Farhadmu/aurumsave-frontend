@@ -28,33 +28,36 @@ import {
   Truck,
 } from 'lucide-react';
 
+import { useLanguage } from '../lib/language-context';
+
 export default function HomePage() {
+  const { language, t, toLocalizedDigits, formatLocalizedBDT } = useLanguage();
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
 
   const faqs = [
     {
-      q: 'Is digital gold on AurumSave backed by actual physical bullion?',
-      a: 'Yes, 100% physically backed and segregated. For every milligram of digital gold purchased through AurumSave, an equivalent amount of physical 24K (99.9% fineness) or 22K (91.6% hallmarked) bullion is purchased from BAJUS certified refiners and allocated in high-security, insured bank-grade vaults. It is not a synthetic derivative or paper promise.',
+      q: t('faq.q1'),
+      a: t('faq.a1'),
     },
     {
-      q: 'What is the minimum amount required to start saving in gold?',
-      a: 'You can start saving with as little as ৳500 or 0.1 grams of gold. Our mission is to make generational wealth preservation accessible to every household across Bangladesh through fractional gold accumulation with zero integer-rounding drift.',
+      q: t('faq.q2'),
+      a: t('faq.a2'),
     },
     {
-      q: 'How does AurumSave determine its gold buy and sell benchmark rates?',
-      a: 'Our benchmark rates are directly synchronized with the official daily rates published by the Bangladesh Jewellers Association (BAJUS). A transparent spread of 2.0% - 2.5% covers assaying, certified tamper-proof custody, bullion insurance, and instant liquidity operations. There are zero hidden making charges.',
+      q: t('faq.q3'),
+      a: t('faq.a3'),
     },
     {
-      q: 'Can I redeem and withdraw physical gold bars or coins?',
-      a: 'Yes. Once your cumulative vault balance reaches 1 Bhori (11.664 grams) or standard denominations (10g, 1 Bhori, 50g, 100g), you can request physical bullion collection or insured secure armored transit delivery across Bangladesh, complete with an individual assay authenticity certificate.',
+      q: t('faq.q4'),
+      a: t('faq.a4'),
     },
     {
-      q: 'How quickly can I liquidate my gold holdings into cash?',
-      a: 'Liquidation is instantaneous. When you sell gold from your vault, funds are immediately credited in Bangladeshi Taka to your Aurum wallet and can be withdrawn directly to your bKash, Nagad, Rocket, or commercial bank account 24/7.',
+      q: t('faq.q5'),
+      a: t('faq.a5'),
     },
     {
-      q: 'Why is National ID (NID) verification mandatory?',
-      a: 'In strict compliance with Bangladesh Financial Intelligence Unit (BFIU) guidelines and Anti-Money Laundering (AML/CFT) regulations, identity verification via Smart NID or Passport is required to ensure non-repudiation and protect your physical bullion property rights.',
+      q: t('faq.q6'),
+      a: t('faq.a6'),
     },
   ];
 
@@ -73,17 +76,16 @@ export default function HomePage() {
           <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-aurum-card border border-aurum-border-gold text-xs text-aurum-gold mb-6 shadow-gold-glow animate-in fade-in">
             <span className="w-2 h-2 rounded-full bg-aurum-gold animate-ping" />
             <span className="font-semibold tracking-wide">
-              Bangladesh&apos;s Sovereign Physical Bullion Savings Infrastructure
+              {t('hero.badge')}
             </span>
           </div>
 
           <h1 className="font-serif-luxury text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-aurum-text max-w-4xl mx-auto leading-[1.12]">
-            Preserve wealth in{' '}
-            <span className="gold-gradient-text">Allocated Physical Gold</span>
+            {t('hero.title')}
           </h1>
 
           <p className="mt-6 text-base sm:text-lg text-aurum-text-muted max-w-2xl mx-auto leading-relaxed">
-            Hedge your Taka against currency inflation. Accumulate 24K & 22K certified gold bullion from as low as ৳500 with instant bKash/Nagad payments, bank-grade insured vaults, and 5-minute guaranteed rate locks.
+            {t('hero.subtitle')}
           </p>
 
           {/* Call-To-Action Cluster */}
@@ -92,14 +94,14 @@ export default function HomePage() {
               href="/register"
               className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-aurum-gold via-aurum-gold-light to-aurum-gold hover:brightness-110 text-aurum-midnight font-bold text-base shadow-gold-glow border border-aurum-gold/50 transition-all flex items-center justify-center space-x-2.5 active:scale-[0.98]"
             >
-              <span>Open Free Vault Account</span>
+              <span>{t('hero.cta.start')}</span>
               <ArrowRight className="w-4 h-4" />
             </a>
             <a
               href="#calculator"
               className="w-full sm:w-auto px-8 py-4 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-aurum-text font-semibold text-base transition-all flex items-center justify-center space-x-2"
             >
-              <span>Explore Savings Calculator</span>
+              <span>{t('hero.cta.calculate')}</span>
             </a>
           </div>
 
@@ -372,13 +374,13 @@ export default function HomePage() {
       <section id="faq" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center space-y-2">
           <Badge variant="gold" size="sm">
-            Answers & Clarifications
+            {language === 'bn' ? 'সাধারণ প্রশ্ন ও উত্তর' : 'Answers & Clarifications'}
           </Badge>
           <h2 className="font-serif-luxury text-3xl sm:text-4xl font-bold text-aurum-text">
-            Frequently Asked Questions
+            {t('faq.title')}
           </h2>
           <p className="text-sm text-aurum-text-muted">
-            Everything you need to know about allocated physical digital gold in Bangladesh.
+            {t('faq.subtitle')}
           </p>
         </div>
 

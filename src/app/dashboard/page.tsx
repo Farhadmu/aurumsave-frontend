@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
+import { useLanguage } from '../../lib/language-context';
 import { apiRequest } from '../../lib/api';
 import {
   CustomerHoldingsSummary,
@@ -53,6 +54,14 @@ import {
 
 export default function DashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const {
+    t,
+    formatLocalizedBDT,
+    formatLocalizedGold,
+    formatLocalizedDateTime,
+    toLocalizedDigits,
+    language,
+  } = useLanguage();
   const router = useRouter();
 
   const [portfolio, setPortfolio] = useState<CustomerHoldingsSummary | null>(null);
@@ -251,14 +260,14 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center space-x-2 mb-1">
             <span className="text-xs uppercase font-mono tracking-wider text-aurum-text-dim font-bold">
-              Secure Allocated Vault Desk
+              {t('dashboard.deskLabel')}
             </span>
             <Badge variant="gold" size="sm">
-              Level 1 Verified Client
+              {t('dashboard.level1Verified')}
             </Badge>
           </div>
           <h1 className="font-serif-luxury text-3xl sm:text-4xl font-bold text-aurum-text">
-            Welcome back, <span className="gold-gradient-text">{user?.fullName}</span>
+            {t('dashboard.welcome')} <span className="gold-gradient-text">{user?.fullName}</span>
           </h1>
         </div>
 
@@ -269,7 +278,7 @@ export default function DashboardPage() {
               size="sm"
               leftIcon={<Target className="w-4 h-4 text-aurum-gold" />}
             >
-              Savings Goals
+              {t('nav.goals')}
             </Button>
           </a>
           <a href="/security">
@@ -278,7 +287,7 @@ export default function DashboardPage() {
               size="sm"
               leftIcon={<Shield className="w-4 h-4 text-emerald-400" />}
             >
-              Security Center
+              {t('nav.security')}
             </Button>
           </a>
           <Button
@@ -287,7 +296,7 @@ export default function DashboardPage() {
             onClick={() => window.print()}
             leftIcon={<Download className="w-4 h-4 text-aurum-gold" />}
           >
-            Export Passport (PDF)
+            {t('vault.downloadPassport')}
           </Button>
           <a href="/trade">
             <Button
@@ -295,7 +304,7 @@ export default function DashboardPage() {
               size="sm"
               leftIcon={<Coins className="w-4 h-4" />}
             >
-              Instant Trade Desk
+              {t('nav.trade')}
             </Button>
           </a>
         </div>
@@ -311,20 +320,20 @@ export default function DashboardPage() {
             <div>
               <h4 className="text-sm font-bold text-aurum-text">
                 {isKycPending
-                  ? 'Identity Verification Under Review'
-                  : 'Complete BFIU Identity Verification'}
+                  ? t('dashboard.kycAlertUnderReview')
+                  : t('dashboard.kycAlertTitle')}
               </h4>
               <p className="text-xs text-aurum-text-muted mt-0.5">
                 {isKycPending
-                  ? 'Your NID verification is currently being reviewed by our compliance desk. High-value physical delivery will be enabled upon approval.'
-                  : 'Submit your Smart NID or Passport to unlock physical bullion delivery and elevated transaction limits.'}
+                  ? t('dashboard.kycAlertPendingDesc')
+                  : t('dashboard.kycAlertDesc')}
               </p>
             </div>
           </div>
           {!isKycPending && (
             <a href="/kyc" className="shrink-0">
               <Button variant="primary" size="sm">
-                Verify NID Now
+                {t('dashboard.verifyNidNow')}
               </Button>
             </a>
           )}
@@ -338,19 +347,19 @@ export default function DashboardPage() {
         {/* Total Valuation */}
         <Card glow hoverLift>
           <div className="flex items-center justify-between text-xs font-mono text-aurum-text-dim mb-2 font-bold uppercase tracking-wider">
-            <span>Portfolio Valuation</span>
+            <span>{t('dashboard.portfolioValuation')}</span>
             <Badge variant="emerald" size="sm">
               Live BAJUS
             </Badge>
           </div>
           <div className="text-3xl font-bold font-mono text-aurum-gold">
-            {formatBDT(totalValuation)}
+            {formatLocalizedBDT(totalValuation)}
           </div>
           <div className="mt-3 pt-3 border-t border-aurum-border flex items-center justify-between text-xs text-aurum-text-muted">
-            <span>Unrealized Gain:</span>
+            <span>{t('dashboard.unrealizedGain')}</span>
             <span className="font-mono text-emerald-400 font-bold">
-              +{formatBDT(portfolio?.unrealizedGainLossBdt || 0)} (
-              {portfolio?.unrealizedGainLossPercentage || 0}%)
+              +{formatLocalizedBDT(portfolio?.unrealizedGainLossBdt || 0)} (
+              {toLocalizedDigits(portfolio?.unrealizedGainLossPercentage || 0)}%)
             </span>
           </div>
         </Card>
@@ -358,29 +367,31 @@ export default function DashboardPage() {
         {/* Total Allocated Physical Weight */}
         <Card hoverLift>
           <div className="flex items-center justify-between text-xs font-mono text-aurum-text-dim mb-2 font-bold uppercase tracking-wider">
-            <span>Allocated Bullion Weight</span>
+            <span>{t('dashboard.allocatedWeight')}</span>
             <Coins className="w-4 h-4 text-aurum-gold" />
           </div>
           <div className="text-3xl font-bold font-mono text-aurum-text">
-            {formatGoldWeight(totalGrams)}
+            {formatLocalizedGold(totalGrams)}
           </div>
           <div className="mt-3 pt-3 border-t border-aurum-border flex items-center justify-between text-xs text-aurum-text-muted">
-            <span>Equivalent Tola:</span>
-            <span className="font-mono font-bold text-aurum-gold">{totalBhori} Bhori</span>
+            <span>{t('dashboard.equivalentTola')}</span>
+            <span className="font-mono font-bold text-aurum-gold">
+              {toLocalizedDigits(totalBhori)} {language === 'bn' ? 'ভরি' : 'Bhori'}
+            </span>
           </div>
         </Card>
 
         {/* Liquid Wallet Balance */}
         <Card hoverLift>
           <div className="flex items-center justify-between text-xs font-mono text-aurum-text-dim mb-2 font-bold uppercase tracking-wider">
-            <span>Liquid Cash Balance</span>
+            <span>{t('dashboard.liquidCash')}</span>
             <CreditCard className="w-4 h-4 text-blue-400" />
           </div>
           <div className="text-3xl font-bold font-mono text-aurum-text">
-            {formatBDT(portfolio?.fiatBalanceBdt || 0)}
+            {formatLocalizedBDT(portfolio?.fiatBalanceBdt || 0)}
           </div>
           <div className="mt-3 pt-3 border-t border-aurum-border flex items-center justify-between text-xs text-aurum-text-muted">
-            <span>Settlement Gateway:</span>
+            <span>{t('dashboard.settlementGateway')}</span>
             <span className="font-mono text-aurum-text font-semibold">bKash / Nagad</span>
           </div>
         </Card>
@@ -388,14 +399,14 @@ export default function DashboardPage() {
         {/* Custody Security Guarantee */}
         <Card hoverLift>
           <div className="flex items-center justify-between text-xs font-mono text-aurum-text-dim mb-2 font-bold uppercase tracking-wider">
-            <span>Vault Custody Status</span>
+            <span>{t('dashboard.custodyStatus')}</span>
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-xl font-bold font-serif-luxury text-emerald-400 mt-1">
-            100% Allocated
+            {t('dashboard.fullyAllocated')}
           </div>
           <p className="text-[11px] text-aurum-text-muted mt-1 leading-snug">
-            Segregated custody insured by Lloyd&apos;s underwriter in Class-III bank vault.
+            {t('dashboard.custodyDesc')}
           </p>
         </Card>
       </div>
@@ -409,16 +420,16 @@ export default function DashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-aurum-border">
             <div>
               <h3 className="font-serif-luxury text-lg sm:text-xl font-bold text-aurum-text">
-                Vault Asset Valuation Trajectory
+                {t('dashboard.chartTitle')}
               </h3>
               <p className="text-xs text-aurum-text-muted">
-                Real-time valuation based on active BAJUS spot rates
+                {t('dashboard.chartSubtitle')}
               </p>
             </div>
             <div className="flex items-center space-x-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs font-mono text-emerald-400 font-semibold">
-                Synchronized
+                {t('dashboard.chartSync')}
               </span>
             </div>
           </div>
@@ -444,7 +455,7 @@ export default function DashboardPage() {
                   fontSize={11}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(v) => `৳${v.toLocaleString()}`}
+                  tickFormatter={(v) => formatLocalizedBDT(v)}
                 />
                 <Tooltip
                   content={({ active, payload }) => {
@@ -454,7 +465,7 @@ export default function DashboardPage() {
                         <div className="p-3 rounded-xl bg-aurum-surface border border-aurum-border-gold shadow-xl text-xs space-y-1">
                           <p className="text-aurum-text-dim font-mono">{data.date}</p>
                           <p className="font-bold font-mono text-aurum-gold text-sm">
-                            ৳{data.valuation.toLocaleString()}
+                            {formatLocalizedBDT(data.valuation)}
                           </p>
                         </div>
                       );
@@ -479,7 +490,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-4 space-y-4">
           <div className="p-6 rounded-3xl bg-aurum-card border border-aurum-border space-y-4 shadow-card-luxury">
             <h3 className="font-serif-luxury text-base font-bold text-aurum-text flex items-center justify-between">
-              <span>Holdings by Purity Grade</span>
+              <span>{t('dashboard.purityHoldings')}</span>
               <Coins className="w-4 h-4 text-aurum-gold" />
             </h3>
 
@@ -490,18 +501,20 @@ export default function DashboardPage() {
               >
                 <div className="flex justify-between items-center">
                   <span className="font-serif-luxury text-base font-bold text-aurum-text">
-                    {item.purity} Gold Bullion
+                    {item.purity} {language === 'bn' ? 'স্বর্ণের বার' : 'Gold Bullion'}
                   </span>
                   <Badge variant={item.purity === PurityGrade.K24 ? 'gold' : 'slate'} size="sm">
-                    {item.purity === PurityGrade.K24 ? '99.9% Pure' : '91.6% Hallmark'}
+                    {item.purity === PurityGrade.K24
+                      ? language === 'bn' ? '৯৯.৯% খাঁটি' : '99.9% Pure'
+                      : language === 'bn' ? '৯১.৬% হলমার্ক' : '91.6% Hallmark'}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-baseline pt-1">
                   <span className="font-mono text-xl font-bold text-aurum-gold">
-                    {formatGoldWeight(item.grams)}
+                    {formatLocalizedGold(item.grams)}
                   </span>
                   <span className="font-mono text-xs text-aurum-text-muted">
-                    {formatBDT(item.valuationBdt)}
+                    {formatLocalizedBDT(item.valuationBdt)}
                   </span>
                 </div>
               </div>
@@ -510,7 +523,7 @@ export default function DashboardPage() {
             <div className="pt-2">
               <a href="/trade?type=BUY">
                 <Button variant="outline" size="sm" className="w-full">
-                  Accumulate More Gold
+                  {t('dashboard.accumulateMore')}
                 </Button>
               </a>
             </div>
@@ -525,10 +538,10 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-aurum-border">
           <div>
             <h3 className="font-serif-luxury text-xl font-bold text-aurum-text">
-              Audited Vault Transaction Ledger
+              {t('dashboard.ledgerTitle')}
             </h3>
             <p className="text-xs text-aurum-text-muted">
-              Immutable journal of gold purchases, sales, and custodial settlements
+              {t('dashboard.ledgerSubtitle')}
             </p>
           </div>
 
@@ -538,7 +551,7 @@ export default function DashboardPage() {
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-aurum-text-dim" />
               <input
                 type="text"
-                placeholder="Search Order ID..."
+                placeholder={t('dashboard.searchOrders')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 pr-3 py-1.5 rounded-xl bg-aurum-surface border border-aurum-border text-xs text-aurum-text placeholder-aurum-text-dim focus:outline-none focus:border-aurum-gold/60 w-36 sm:w-48"
@@ -557,7 +570,11 @@ export default function DashboardPage() {
                       : 'text-aurum-text-muted hover:text-aurum-text'
                   }`}
                 >
-                  {filter}
+                  {filter === 'ALL'
+                    ? t('dashboard.filterAll')
+                    : filter === 'BUY'
+                    ? t('dashboard.filterBuy')
+                    : t('dashboard.filterSell')}
                 </button>
               ))}
             </div>
@@ -570,7 +587,7 @@ export default function DashboardPage() {
               leftIcon={<Download className="w-3.5 h-3.5" />}
               disabled={orders.length === 0}
             >
-              Export Statement
+              {t('dashboard.exportStatement')}
             </Button>
           </div>
         </div>
@@ -578,13 +595,13 @@ export default function DashboardPage() {
         {filteredOrders.length === 0 ? (
           <EmptyState
             icon={<ShoppingBag className="w-7 h-7" />}
-            title="No Transactions Found"
+            title={t('dashboard.noTransactions')}
             description={
               searchQuery
-                ? 'No orders matched your search query.'
-                : 'You have not made any gold purchases or liquidations yet. Start accumulating from as little as ৳500.'
+                ? t('dashboard.noTransactionsFiltered')
+                : t('dashboard.noTransactionsDesc')
             }
-            actionText={searchQuery ? 'Clear Filter' : 'Buy Gold Now'}
+            actionText={searchQuery ? t('dashboard.clearFilter') : t('dashboard.buyGoldNow')}
             onAction={() => {
               if (searchQuery) setSearchQuery('');
               else router.push('/trade');
@@ -595,14 +612,14 @@ export default function DashboardPage() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-aurum-border text-aurum-text-dim uppercase font-mono tracking-wider">
-                  <th className="py-3 px-4 font-bold">Order ID</th>
-                  <th className="py-3 px-4 font-bold">Type</th>
-                  <th className="py-3 px-4 font-bold">Purity</th>
-                  <th className="py-3 px-4 font-bold">Weight</th>
-                  <th className="py-3 px-4 font-bold">Amount</th>
-                  <th className="py-3 px-4 font-bold">Status</th>
-                  <th className="py-3 px-4 font-bold">Date</th>
-                  <th className="py-3 px-4 font-bold text-right">Receipt</th>
+                  <th className="py-3 px-4 font-bold">{t('dashboard.table.orderId')}</th>
+                  <th className="py-3 px-4 font-bold">{t('dashboard.table.type')}</th>
+                  <th className="py-3 px-4 font-bold">{t('dashboard.table.purity')}</th>
+                  <th className="py-3 px-4 font-bold">{t('dashboard.table.weight')}</th>
+                  <th className="py-3 px-4 font-bold">{t('dashboard.table.amount')}</th>
+                  <th className="py-3 px-4 font-bold">{t('dashboard.table.status')}</th>
+                  <th className="py-3 px-4 font-bold">{t('dashboard.table.date')}</th>
+                  <th className="py-3 px-4 font-bold text-right">{t('dashboard.table.receipt')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-aurum-border/60">
@@ -618,15 +635,15 @@ export default function DashboardPage() {
                       </td>
                       <td className="py-3.5 px-4">
                         <Badge variant={isBuy ? 'gold' : 'slate'} size="sm">
-                          {order.orderType}
+                          {isBuy ? t('dashboard.filterBuy') : t('dashboard.filterSell')}
                         </Badge>
                       </td>
                       <td className="py-3.5 px-4 font-bold text-aurum-text">{order.purity}</td>
                       <td className="py-3.5 px-4 font-mono font-semibold text-aurum-gold">
-                        {formatGoldWeight(order.weightGrams)}
+                        {formatLocalizedGold(order.weightGrams)}
                       </td>
                       <td className="py-3.5 px-4 font-mono font-bold text-aurum-text">
-                        {formatBDT(order.totalBdt)}
+                        {formatLocalizedBDT(order.totalBdt)}
                       </td>
                       <td className="py-3.5 px-4">
                         <Badge
@@ -641,11 +658,17 @@ export default function DashboardPage() {
                           }
                           size="sm"
                         >
-                          {order.status}
+                          {order.status === OrderStatus.COMPLETED
+                            ? t('common.completed')
+                            : order.status === OrderStatus.PAYMENT_CONFIRMED
+                            ? t('common.verified')
+                            : order.status === OrderStatus.AWAITING_PAYMENT
+                            ? t('common.pending')
+                            : order.status}
                         </Badge>
                       </td>
                       <td className="py-3.5 px-4 font-mono text-aurum-text-muted">
-                        {formatDateTime(order.createdAt)}
+                        {formatLocalizedDateTime(order.createdAt)}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <button
@@ -653,7 +676,7 @@ export default function DashboardPage() {
                           className="px-2.5 py-1 rounded-lg bg-aurum-surface border border-aurum-border hover:border-aurum-gold text-aurum-text hover:text-aurum-gold text-xs font-semibold transition-all inline-flex items-center space-x-1"
                         >
                           <Receipt className="w-3 h-3" />
-                          <span>View</span>
+                          <span>{t('dashboard.table.view')}</span>
                         </button>
                       </td>
                     </tr>
@@ -684,52 +707,52 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h3 className="font-serif-luxury text-xl font-bold text-aurum-text">
-                  Physical Bullion Delivery Desk
+                  {t('dashboard.deliveryDeskTitle')}
                 </h3>
                 <p className="text-xs text-aurum-text-muted">
-                  Redeem your segregated physical gold into certified bars
+                  {t('dashboard.deliveryDeskSubtitle')}
                 </p>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-aurum-surface border border-aurum-border space-y-3 text-xs">
               <div className="flex justify-between">
-                <span className="text-aurum-text-muted">Available Vault Balance:</span>
+                <span className="text-aurum-text-muted">{t('dashboard.availableVaultBalance')}</span>
                 <span className="font-mono font-bold text-aurum-gold">
-                  {formatGoldWeight(totalGrams)} ({totalBhori} Bhori)
+                  {formatLocalizedGold(totalGrams)} ({toLocalizedDigits(totalBhori)} {language === 'bn' ? 'ভরি' : 'Bhori'})
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-aurum-text-muted">Minimum Physical Redemption:</span>
-                <span className="font-mono text-aurum-text">1 Bhori (11.664 Grams)</span>
+                <span className="text-aurum-text-muted">{t('dashboard.minRedemption')}</span>
+                <span className="font-mono text-aurum-text">{t('dashboard.minRedemptionVal')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-aurum-text-muted">Certified Assay Pack:</span>
-                <span className="text-emerald-400 font-bold">Tamper-Proof CertiCard</span>
+                <span className="text-aurum-text-muted">{t('dashboard.certifiedPack')}</span>
+                <span className="text-emerald-400 font-bold">{t('dashboard.certiCard')}</span>
               </div>
             </div>
 
             {totalGrams < 11.664 ? (
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs space-y-2">
-                <p className="font-bold">Minimum Threshold Requirement</p>
+                <p className="font-bold">{t('dashboard.minThresholdTitle')}</p>
                 <p>
-                  You need at least <strong>1 Bhori (11.664g)</strong> to request physical bar delivery. You currently hold <strong>{totalGrams}g</strong>. Continue micro-saving to reach the delivery milestone.
+                  {t('dashboard.minThresholdNotice')}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 <p className="text-xs text-aurum-text-muted">
-                  Our armored transport logistics partner will coordinate delivery to your verified registered address with biometric verification upon handover.
+                  {t('dashboard.deliveryLogistics')}
                 </p>
                 <Button
                   variant="primary"
                   className="w-full"
                   onClick={() => {
-                    alert('Delivery request filed with Vault Custody Desk. An officer will contact you.');
+                    alert(language === 'bn' ? 'ডেলিভারি আবেদন ভল্ট ডেস্কে গৃহীত হয়েছে।' : 'Delivery request filed with Vault Custody Desk. An officer will contact you.');
                     setDeliveryModalOpen(false);
                   }}
                 >
-                  Confirm Physical Redemption Request
+                  {t('dashboard.confirmRedemption')}
                 </Button>
               </div>
             )}
@@ -740,7 +763,7 @@ export default function DashboardPage() {
               className="w-full"
               onClick={() => setDeliveryModalOpen(false)}
             >
-              Close Window
+              {t('dashboard.closeWindow')}
             </Button>
           </div>
         </div>
@@ -764,49 +787,49 @@ export default function DashboardPage() {
                 <Receipt className="w-6 h-6" />
               </div>
               <h3 className="font-serif-luxury text-xl font-bold text-aurum-text">
-                AurumSave Bullion Certificate
+                {t('dashboard.certificateTitle')}
               </h3>
               <p className="text-xs font-mono text-aurum-text-dim">
-                Order Reference: {selectedOrder.orderId}
+                {t('dashboard.orderRef')} {selectedOrder.orderId}
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-aurum-surface border border-aurum-border space-y-2.5 text-xs">
               <div className="flex justify-between">
-                <span className="text-aurum-text-muted">Transaction Type:</span>
+                <span className="text-aurum-text-muted">{t('dashboard.table.type')}:</span>
                 <span className="font-bold text-aurum-text">{selectedOrder.orderType}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-aurum-text-muted">Gold Purity:</span>
+                <span className="text-aurum-text-muted">{t('dashboard.table.purity')}:</span>
                 <span className="font-bold text-aurum-text">{selectedOrder.purity}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-aurum-text-muted">Allocated Weight:</span>
+                <span className="text-aurum-text-muted">{t('dashboard.table.weight')}:</span>
                 <span className="font-mono font-bold text-aurum-gold">
-                  {formatGoldWeight(selectedOrder.weightGrams, true)}
+                  {formatLocalizedGold(selectedOrder.weightGrams, true)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-aurum-text-muted">Settlement Total:</span>
+                <span className="text-aurum-text-muted">{t('dashboard.table.amount')}:</span>
                 <span className="font-mono font-bold text-aurum-text text-sm">
-                  {formatBDT(selectedOrder.totalBdt)}
+                  {formatLocalizedBDT(selectedOrder.totalBdt)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-aurum-text-muted">Timestamp:</span>
+                <span className="text-aurum-text-muted">{t('dashboard.table.date')}:</span>
                 <span className="font-mono text-aurum-text-dim">
-                  {formatDateTime(selectedOrder.createdAt)}
+                  {formatLocalizedDateTime(selectedOrder.createdAt)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-aurum-text-muted">Vault Status:</span>
+                <span className="text-aurum-text-muted">{t('dashboard.table.status')}:</span>
                 <span className="text-emerald-400 font-bold">{selectedOrder.status}</span>
               </div>
             </div>
 
             <div className="text-center">
               <p className="text-[10px] text-aurum-text-dim">
-                Cryptographically audited by AurumSave Sovereign Ledger. Non-repudiable property of the authenticated client.
+                {t('dashboard.certAuditNote')}
               </p>
             </div>
 
@@ -816,7 +839,7 @@ export default function DashboardPage() {
               className="w-full"
               onClick={() => setSelectedOrder(null)}
             >
-              Close Receipt
+              {t('dashboard.closeReceipt')}
             </Button>
           </div>
         </div>
