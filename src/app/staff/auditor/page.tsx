@@ -34,6 +34,23 @@ export default function AuditorPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<any>(null);
+
+  const handleVerifyChain = async () => {
+    setIsVerifying(true);
+    try {
+      const res = await apiRequest<{ success: boolean; data: any }>('/audit/verify');
+      if (res.success) {
+        setVerificationResult(res.data);
+      }
+    } catch (err: any) {
+      console.error('Audit chain verification failed:', err);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   const loadLogs = async () => {
     try {
       setIsLoading(true);
@@ -98,12 +115,29 @@ export default function AuditorPage() {
       {/* Verification Pillars */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <Card hoverLift>
-          <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim font-bold block mb-1">
-            Chain Integrity
-          </span>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim font-bold block">
+              Chain Integrity
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleVerifyChain}
+              isLoading={isVerifying}
+              className="text-[11px] py-1 px-2.5 h-7"
+            >
+              Verify Chain
+            </Button>
+          </div>
           <div className="text-xl font-bold font-serif-luxury text-emerald-400 mt-1 flex items-center space-x-1.5">
             <CheckCircle2 className="w-5 h-5" />
-            <span>100% Tamper Evident</span>
+            <span>
+              {verificationResult
+                ? verificationResult.isChainValid
+                  ? `Verified (${verificationResult.verifiedCount} blocks)`
+                  : 'Chain Compromised'
+                : 'Tamper Evident'}
+            </span>
           </div>
           <span className="text-xs text-aurum-text-muted mt-2 block font-mono">
             SHA-256 Sequential Hash Chaining

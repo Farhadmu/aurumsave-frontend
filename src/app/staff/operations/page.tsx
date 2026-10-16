@@ -40,7 +40,7 @@ export default function OperationsPage() {
     try {
       const [recRes, ordRes] = await Promise.all([
         apiRequest<{ success: boolean; data: any }>('/operations/reconciliation'),
-        apiRequest<{ success: boolean; data: any[] }>('/orders?limit=25'),
+        apiRequest<{ success: boolean; data: any[] }>('/orders/all?limit=25'),
       ]);
       if (recRes.success) setReport(recRes.data);
       if (ordRes.success) setOrders(ordRes.data);

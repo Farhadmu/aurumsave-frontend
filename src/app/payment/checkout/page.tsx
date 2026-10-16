@@ -59,12 +59,10 @@ function CheckoutContent() {
     setError(null);
 
     try {
-      const res = await apiRequest<{ success: boolean; message: string }>('/payments/webhook', {
+      const res = await apiRequest<{ success: boolean; message: string }>('/payments/sandbox/simulate', {
         method: 'POST',
         body: JSON.stringify({
           paymentId: payment.paymentId,
-          gatewayTransactionId: `TRX-${Date.now()}-SIMULATED`,
-          signature: 'SANDBOX_BANGLADESH_HMAC_SHA256_VERIFIED',
           success: true,
         }),
       });
