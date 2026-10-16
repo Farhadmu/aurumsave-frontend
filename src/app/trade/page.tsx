@@ -49,6 +49,10 @@ function TradeContent() {
   const [error, setError] = useState<string | null>(null);
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.BKASH);
+  const [payoutType, setPayoutType] = useState<'BKASH' | 'NAGAD' | 'BANK'>('BKASH');
+  const [payoutNumber, setPayoutNumber] = useState<string>('');
+  const [payoutBankName, setPayoutBankName] = useState<string>('');
+  const [payoutRoutingNumber, setPayoutRoutingNumber] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
@@ -110,6 +114,14 @@ function TradeContent() {
   const handleConfirmOrder = async () => {
     if (!quote) return;
     setError(null);
+
+    if (orderType === OrderType.SELL) {
+      if (!payoutNumber.trim()) {
+        setError('Please provide your recipient account or wallet number for payout settlement.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -119,6 +131,20 @@ function TradeContent() {
           quoteId: quote.quoteId,
           paymentMethod,
           idempotencyKey: `IDEM-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+          ...(orderType === OrderType.SELL
+            ? {
+                payoutDetails: {
+                  accountType: payoutType,
+                  accountNumber: payoutNumber.trim(),
+                  ...(payoutType === 'BANK'
+                    ? {
+                        bankName: payoutBankName.trim() || undefined,
+                        routingNumber: payoutRoutingNumber.trim() || undefined,
+                      }
+                    : {}),
+                },
+              }
+            : {}),
         }),
       });
 
@@ -344,6 +370,71 @@ function TradeContent() {
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Payout Destination for SELL */}
+            {orderType === OrderType.SELL && (
+              <div className="p-4 rounded-2xl bg-aurum-surface/60 border border-aurum-border space-y-3">
+                <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block">
+                  Payout Disbursement Destination
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'BKASH', label: 'bKash Wallet' },
+                    { id: 'NAGAD', label: 'Nagad Wallet' },
+                    { id: 'BANK', label: 'Bank Transfer' },
+                  ].map((dest) => (
+                    <button
+                      key={dest.id}
+                      type="button"
+                      onClick={() => setPayoutType(dest.id as any)}
+                      className={`p-2.5 rounded-xl border text-center text-xs font-bold transition-all ${
+                        payoutType === dest.id
+                          ? 'bg-aurum-card border-aurum-gold text-aurum-gold'
+                          : 'bg-aurum-card/40 border-aurum-border text-aurum-text-muted'
+                      }`}
+                    >
+                      {dest.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div>
+                  <input
+                    type="text"
+                    placeholder={
+                      payoutType === 'BANK'
+                        ? 'Bank Account Number'
+                        : `${payoutType} Mobile Number (e.g. 01700000000)`
+                    }
+                    value={payoutNumber}
+                    onChange={(e) => setPayoutNumber(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-aurum-card border border-aurum-border text-sm font-mono text-aurum-text focus:border-aurum-gold/60 focus:outline-none"
+                  />
+                </div>
+
+                {payoutType === 'BANK' && (
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <input
+                      type="text"
+                      placeholder="Bank Name (e.g. City Bank)"
+                      value={payoutBankName}
+                      onChange={(e) => setPayoutBankName(e.target.value)}
+                      className="px-3 py-2 rounded-xl bg-aurum-card border border-aurum-border text-xs text-aurum-text focus:border-aurum-gold/60 focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Routing Number"
+                      value={payoutRoutingNumber}
+                      onChange={(e) => setPayoutRoutingNumber(e.target.value)}
+                      className="px-3 py-2 rounded-xl bg-aurum-card border border-aurum-border text-xs text-aurum-text focus:border-aurum-gold/60 focus:outline-none"
+                    />
+                  </div>
+                )}
+                <span className="text-[11px] text-aurum-text-dim block">
+                  Gold will be safely placed into vault escrow until payout disbursement is authorized and completed by Operations.
+                </span>
               </div>
             )}
 

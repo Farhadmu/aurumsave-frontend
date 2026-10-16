@@ -66,6 +66,36 @@ export default function DashboardPage() {
   // Receipt Modal State
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
+  const handleDownloadStatement = () => {
+    if (!orders || orders.length === 0) return;
+
+    const headers = ['Order ID', 'Type', 'Purity', 'Weight (g)', 'Amount (BDT)', 'Status', 'Date'];
+    const rows = orders.map((o) => [
+      `"${o.orderId || ''}"`,
+      `"${o.orderType || ''}"`,
+      `"${o.purity || ''}"`,
+      o.weightGrams ?? 0,
+      o.totalBdt ?? 0,
+      `"${o.status || ''}"`,
+      `"${new Date(o.createdAt).toISOString()}"`,
+    ]);
+
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute(
+      'download',
+      `AurumSave_Gold_Statement_${new Date().toISOString().slice(0, 10)}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const loadDashboardData = async () => {
     if (!user) return;
     try {
@@ -492,6 +522,17 @@ export default function DashboardPage() {
                 </button>
               ))}
             </div>
+
+            {/* Export Statement */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadStatement}
+              leftIcon={<Download className="w-3.5 h-3.5" />}
+              disabled={orders.length === 0}
+            >
+              Export Statement
+            </Button>
           </div>
         </div>
 
