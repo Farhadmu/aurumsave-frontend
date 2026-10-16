@@ -14,6 +14,7 @@ import {
   Award,
   Shield,
   HelpCircle,
+  Gift,
 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -55,6 +56,12 @@ export default function DashboardLayout({
       labelEn: 'AutoSave (SIP)',
       labelBn: 'অটোসেভ কিস্তি',
       icon: Repeat,
+    },
+    {
+      href: '/dashboard/gifts',
+      labelEn: 'Gold Gifting',
+      labelBn: 'স্বর্ণ উপহার',
+      icon: Gift,
     },
     {
       href: '/dashboard/simulator',

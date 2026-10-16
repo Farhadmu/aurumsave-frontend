@@ -31,6 +31,8 @@ export default function OperationsPage() {
 
   const [report, setReport] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [disputes, setDisputes] = useState<any[]>([]);
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,11 +40,15 @@ export default function OperationsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [recRes, ordRes] = await Promise.all([
+      const [recRes, ordRes, dispRes] = await Promise.all([
         apiRequest<{ success: boolean; data: any }>('/operations/reconciliation'),
         apiRequest<{ success: boolean; data: any[] }>('/orders/all?limit=25'),
+        apiRequest<{ success: boolean; data: any[] }>('/support/disputes').catch(() => null),
       ]);
       if (recRes.success) setReport(recRes.data);
+      if (dispRes?.success && Array.isArray(dispRes.data)) {
+        setDisputes(dispRes.data);
+      }
       if (ordRes.success && ordRes.data) {
         const rawOrders = Array.isArray(ordRes.data)
           ? ordRes.data
@@ -69,6 +75,39 @@ export default function OperationsPage() {
       setError('Unable to load Treasury & Reconciliation Ledger.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResolveDispute = async (
+    ticketId: string,
+    action: 'REFUND_APPROVED' | 'DISPUTE_REJECTED' | 'MANUAL_SETTLED',
+  ) => {
+    const promptMsg =
+      action === 'REFUND_APPROVED'
+        ? 'Provide authoritative reason for approving refund:'
+        : action === 'MANUAL_SETTLED'
+        ? 'Provide manual settlement note with bank reference:'
+        : 'Provide dispute rejection reason:';
+    const note = window.prompt(promptMsg, 'Verified against authoritative bank statement and MFS ledger.');
+    if (!note || !note.trim()) return;
+
+    setResolvingId(ticketId);
+    try {
+      const res = await apiRequest<{ success: boolean; message: string }>(
+        `/support/disputes/${ticketId}/resolve`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ action, note: note.trim() }),
+        },
+      );
+      if (res.success) {
+        alert(res.message);
+        loadData();
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to resolve dispute');
+    } finally {
+      setResolvingId(null);
     }
   };
 
@@ -194,6 +233,110 @@ export default function OperationsPage() {
             0.5% Protocol Fee Accruals
           </span>
         </Card>
+      </div>
+
+      {/* Dispute Escalation & 4-Eyes Resolution Queue */}
+      <div className="rounded-3xl bg-aurum-card border border-aurum-border p-6 sm:p-8 shadow-card-luxury space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-aurum-border gap-2">
+          <div>
+            <h3 className="font-serif-luxury text-xl font-bold text-aurum-text flex items-center space-x-2">
+              <AlertTriangle className="w-5 h-5 text-amber-400" />
+              <span>Order Dispute Triage & 4-Eyes Resolution Queue</span>
+            </h3>
+            <p className="text-xs text-aurum-text-muted">
+              Audited escalation pipeline from Customer Support requiring Finance Officer authoritative adjudication
+            </p>
+          </div>
+          <Badge variant={disputes.length > 0 ? 'amber' : 'slate'} size="sm">
+            {disputes.length} Escalated Issues
+          </Badge>
+        </div>
+
+        {disputes.length === 0 ? (
+          <div className="p-8 text-center bg-aurum-surface/40 rounded-2xl border border-aurum-border/60 text-aurum-text-dim text-xs">
+            <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+            <span>No pending financial disputes. All order clearing reconciliation is nominal.</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-aurum-border text-aurum-text-dim uppercase font-mono tracking-wider">
+                  <th className="py-3 px-4 font-bold">Dispute Ref</th>
+                  <th className="py-3 px-4 font-bold">Client Particulars</th>
+                  <th className="py-3 px-4 font-bold">Order Ref</th>
+                  <th className="py-3 px-4 font-bold">Escalation Reason</th>
+                  <th className="py-3 px-4 font-bold">Status</th>
+                  <th className="py-3 px-4 font-bold text-right">4-Eyes Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-aurum-border/60">
+                {disputes.map((disp) => {
+                  const isResolved = disp.status === 'RESOLVED';
+
+                  return (
+                    <tr key={disp._id} className="hover:bg-aurum-surface/50 transition-colors">
+                      <td className="py-3.5 px-4 font-mono font-bold text-aurum-gold">
+                        {disp.ticketId}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <strong className="text-aurum-text block">{disp.userId?.fullName || 'Client'}</strong>
+                        <span className="text-[11px] text-aurum-text-dim font-mono">{disp.userId?.phone || disp.userId?.email}</span>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono font-bold text-aurum-text">
+                        {disp.relatedOrderId || '—'}
+                      </td>
+                      <td className="py-3.5 px-4 text-xs text-aurum-text-muted max-w-xs">
+                        <span className="block text-aurum-text font-medium">{disp.subject}</span>
+                        {disp.financeResolutionNote && (
+                          <span className="text-[10px] text-emerald-400 font-mono block mt-0.5">
+                            Resolution: {disp.financeResolutionNote}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <Badge variant={isResolved ? 'emerald' : 'amber'} size="sm">
+                          {disp.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        {!isResolved ? (
+                          <div className="flex items-center justify-end space-x-1.5">
+                            <button
+                              onClick={() => handleResolveDispute(disp.ticketId, 'REFUND_APPROVED')}
+                              disabled={resolvingId === disp.ticketId}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold transition-all"
+                            >
+                              Approve Refund
+                            </button>
+                            <button
+                              onClick={() => handleResolveDispute(disp.ticketId, 'MANUAL_SETTLED')}
+                              disabled={resolvingId === disp.ticketId}
+                              className="px-2.5 py-1 rounded-lg bg-aurum-gold/15 hover:bg-aurum-gold/25 border border-aurum-gold/40 text-aurum-gold text-[11px] font-bold transition-all"
+                            >
+                              Settle
+                            </button>
+                            <button
+                              onClick={() => handleResolveDispute(disp.ticketId, 'DISPUTE_REJECTED')}
+                              disabled={resolvingId === disp.ticketId}
+                              className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[11px] font-bold transition-all"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] font-mono text-aurum-text-dim">
+                            Adjudicated: {disp.financeAction || 'RESOLVED'}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Settlement Orders Journal */}

@@ -43,6 +43,12 @@ export default function StaffSupportPage() {
   const [updateStatus, setUpdateStatus] = useState<TicketStatus>(TicketStatus.IN_PROGRESS);
   const [isReplying, setIsReplying] = useState(false);
 
+  // Dispute escalation state
+  const [showEscalateModal, setShowEscalateModal] = useState(false);
+  const [escalateReason, setEscalateReason] = useState('');
+  const [escalateOrderId, setEscalateOrderId] = useState('');
+  const [isEscalating, setIsEscalating] = useState(false);
+
   const loadTicketDetails = async (ticketId: string) => {
     try {
       const res = await apiRequest<{
@@ -129,6 +135,37 @@ export default function StaffSupportPage() {
       alert(err.message || 'Failed to send response');
     } finally {
       setIsReplying(false);
+    }
+  };
+
+  const handleEscalate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTicket || !escalateReason.trim()) return;
+
+    setIsEscalating(true);
+    try {
+      const res = await apiRequest<{ success: boolean; message: string; ticket: any }>(
+        `/support/tickets/${selectedTicket.ticketId}/escalate`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            reason: escalateReason.trim(),
+            relatedOrderId: escalateOrderId.trim() || selectedTicket.relatedOrderId,
+          }),
+        },
+      );
+
+      if (res.success) {
+        alert('Ticket successfully escalated to Finance Operations Queue');
+        setShowEscalateModal(false);
+        setEscalateReason('');
+        loadTicketDetails(selectedTicket.ticketId);
+        loadQueue();
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to escalate ticket to Finance');
+    } finally {
+      setIsEscalating(false);
     }
   };
 
@@ -250,6 +287,23 @@ export default function StaffSupportPage() {
                     <Badge variant="slate" size="sm">
                       {selectedTicket.category || 'GENERAL'}
                     </Badge>
+                    {selectedTicket.escalatedToFinance ? (
+                      <Badge variant="amber" size="sm">
+                        Escalated to Finance
+                      </Badge>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEscalateOrderId(selectedTicket.relatedOrderId || '');
+                          setShowEscalateModal(true);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-[11px] font-bold transition-all flex items-center space-x-1"
+                      >
+                        <AlertCircle className="w-3 h-3" />
+                        <span>Escalate to Finance</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -368,6 +422,82 @@ export default function StaffSupportPage() {
           )}
         </div>
       </div>
+
+      {/* Escalate to Finance Modal */}
+      {showEscalateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md rounded-3xl bg-aurum-card border border-aurum-border p-6 sm:p-8 space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-aurum-border">
+              <h3 className="text-lg font-bold text-aurum-text flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5 text-amber-400" />
+                <span>Escalate Dispute to Finance</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowEscalateModal(false)}
+                className="text-aurum-text-dim hover:text-aurum-text text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEscalate} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-aurum-text mb-1">
+                  Ticket Ref:
+                </label>
+                <div className="p-2.5 rounded-xl bg-aurum-surface font-mono text-xs text-aurum-gold">
+                  {selectedTicket?.ticketId} ({selectedTicket?.subject})
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-aurum-text mb-1">
+                  Related Order ID (Optional):
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. ORD-1718000000-ABCDEF"
+                  value={escalateOrderId}
+                  onChange={(e) => setEscalateOrderId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-xs text-aurum-text focus:outline-none focus:border-aurum-gold font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-aurum-text mb-1">
+                  Reason for Financial Escalation:
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Describe payment gateway discrepancy, bank statement verification, or refund request..."
+                  value={escalateReason}
+                  onChange={(e) => setEscalateReason(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-aurum-surface border border-aurum-border text-xs text-aurum-text focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div className="flex items-center space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEscalateModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-aurum-surface border border-aurum-border text-xs font-bold text-aurum-text"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isEscalating || !escalateReason.trim()}
+                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all disabled:opacity-50"
+                >
+                  {isEscalating ? 'Escalating...' : 'Confirm Escalation'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
