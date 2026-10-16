@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0b1020;
+  --foreground: #f6f2e9;
+  --surface: #121a2b;
+  --card: #182238;
+  --border: #233252;
+  --gold: #d9b66d;
+  --gold-light: #f3e4c3;
+  --gold-dark: #a88439;
+  --muted: #9ca7ba;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b1020;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #233252;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d9b66d;
+}
+
+/* Shimmer & Glow Effects */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #f6f2e9 0%, #d9b66d 50%, #f3e4c3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient-border {
+  border-image: linear-gradient(135deg, rgba(217, 182, 109, 0.4), rgba(217, 182, 109, 0.05)) 1;
+}
+
+.glass-panel {
+  background: rgba(18, 26, 43, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(217, 182, 109, 0.15);
+}
+
+.glass-panel:hover {
+  border-color: rgba(217, 182, 109, 0.3);
+}
+
+/* Accessible focus outline */
+*:focus-visible {
+  outline: 2px solid #d9b66d;
+  outline-offset: 2px;
+}
