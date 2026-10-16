@@ -30,68 +30,13 @@ export default function GoldPriceWidget() {
       if (res.success && res.data && res.data.length > 0) {
         setRates(res.data);
       } else {
-        // Fallback default benchmark rates if database was just spun up
-        setRates([
-          {
-            purity: PurityGrade.K24,
-            buyPricePerGramPoisha: 1245000,
-            sellPricePerGramPoisha: 1220100,
-            buyPricePerGramBdt: 12450,
-            sellPricePerGramBdt: 12201,
-            buyPricePerBhoriBdt: 145217,
-            sellPricePerBhoriBdt: 142312,
-            effectiveAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 86400000).toISOString(),
-            source: 'BAJUS Daily Rate Circular',
-            isStale: false,
-            spreadPercentage: 2.0,
-          },
-          {
-            purity: PurityGrade.K22,
-            buyPricePerGramPoisha: 1141200,
-            sellPricePerGramPoisha: 1118376,
-            buyPricePerGramBdt: 11412,
-            sellPricePerGramBdt: 11184,
-            buyPricePerBhoriBdt: 133109,
-            sellPricePerBhoriBdt: 130450,
-            effectiveAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 86400000).toISOString(),
-            source: 'BAJUS Daily Rate Circular',
-            isStale: false,
-            spreadPercentage: 2.0,
-          },
-          {
-            purity: PurityGrade.K21,
-            buyPricePerGramPoisha: 1089400,
-            sellPricePerGramPoisha: 1064343,
-            buyPricePerGramBdt: 10894,
-            sellPricePerGramBdt: 10643,
-            buyPricePerBhoriBdt: 127067,
-            sellPricePerBhoriBdt: 124140,
-            effectiveAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 86400000).toISOString(),
-            source: 'BAJUS Daily Rate Circular',
-            isStale: false,
-            spreadPercentage: 2.3,
-          },
-          {
-            purity: PurityGrade.K18,
-            buyPricePerGramPoisha: 933800,
-            sellPricePerGramPoisha: 910455,
-            buyPricePerGramBdt: 9338,
-            sellPricePerGramBdt: 9105,
-            buyPricePerBhoriBdt: 108918,
-            sellPricePerBhoriBdt: 106197,
-            effectiveAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 86400000).toISOString(),
-            source: 'BAJUS Daily Rate Circular',
-            isStale: false,
-            spreadPercentage: 2.5,
-          },
-        ]);
+        // Honest unavailable state — never invent prices
+        setRates([]);
+        setError('Price benchmark temporarily unavailable from market oracle.');
       }
     } catch (err: any) {
       console.error('Failed to load gold rates:', err);
+      setRates([]);
       setError('Unable to load live rates from market oracle.');
     } finally {
       setIsLoading(false);

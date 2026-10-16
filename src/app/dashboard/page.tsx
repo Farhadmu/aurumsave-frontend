@@ -187,24 +187,8 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, router]);
 
-  // Synthetic portfolio performance timeline based on customer holdings
-  const performanceData = useMemo(() => {
-    const days = 14;
-    const data = [];
-    const now = new Date();
-    const currentVal = portfolio?.totalValuationBdt || 0;
-
-    for (let i = days; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const factor = currentVal > 0 ? (1 - (i / days) * 0.05) : 0;
-      data.push({
-        date: d.toLocaleDateString('en-BD', { month: 'short', day: 'numeric' }),
-        valuation: Math.round(currentVal * factor),
-      });
-    }
-    return data;
-  }, [portfolio]);
+  // Holdings state check
+  const hasHoldings = Boolean(portfolio && portfolio.totalGoldGrams > 0);
 
   // Filtered orders
   const filteredOrders = useMemo(() => {
@@ -415,75 +399,120 @@ export default function DashboardPage() {
           PORTFOLIO ASSET PERFORMANCE CHART & PURITY BREAKDOWN
          ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
-        {/* Performance Chart */}
-        <div className="lg:col-span-8 rounded-3xl bg-aurum-card border border-aurum-border p-6 sm:p-8 shadow-card-luxury space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-aurum-border">
+        {/* Vault Holdings / Onboarding Panel */}
+        <div className="lg:col-span-8 rounded-3xl bg-aurum-card border border-aurum-border p-6 sm:p-8 shadow-card-luxury flex flex-col justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-aurum-border">
             <div>
               <h3 className="font-serif-luxury text-lg sm:text-xl font-bold text-aurum-text">
-                {t('dashboard.chartTitle')}
+                {hasHoldings ? (language === 'bn' ? 'সংরক্ষিত স্বর্ণ ও সম্পদ সারসংক্ষেপ' : 'Allocated Bullion Reserve') : (language === 'bn' ? 'স্বর্ণ ভল্ট স্ট্যাটাস' : 'Vault Custody Status')}
               </h3>
-              <p className="text-xs text-aurum-text-muted">
-                {t('dashboard.chartSubtitle')}
+              <p className="text-xs text-aurum-text-muted mt-0.5">
+                {hasHoldings
+                  ? (language === 'bn' ? 'খতিয়ানে সংরক্ষিত প্রকৃত খাঁটি স্বর্ণ এবং লাইভ বাজার দর।' : 'Real-time verified gold weight recorded in double-entry cryptographic ledger.')
+                  : (language === 'bn' ? 'আপনার ব্যক্তিগত ভল্ট সক্রিয় ও প্রস্তুত।' : 'Your allocated depository vault is active and ready for micro-accumulations.')}
               </p>
             </div>
             <div className="flex items-center space-x-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs font-mono text-emerald-400 font-semibold">
-                {t('dashboard.chartSync')}
+                {language === 'bn' ? 'বাজুস লাইভ সিঙ্ক' : 'BAJUS Live Sync'}
               </span>
             </div>
           </div>
 
-          <div className="h-64 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="vaultGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#D4AF37" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="date"
-                  stroke="#64748B"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={{ stroke: 'rgba(212, 175, 55, 0.15)' }}
-                />
-                <YAxis
-                  stroke="#64748B"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v) => formatLocalizedBDT(v)}
-                />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="p-3 rounded-xl bg-aurum-surface border border-aurum-border-gold shadow-xl text-xs space-y-1">
-                          <p className="text-aurum-text-dim font-mono">{data.date}</p>
-                          <p className="font-bold font-mono text-aurum-gold text-sm">
-                            {formatLocalizedBDT(data.valuation)}
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="valuation"
-                  stroke="#D4AF37"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#vaultGradient)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          {!hasHoldings ? (
+            <div className="py-10 text-center space-y-4 my-auto">
+              <div className="w-14 h-14 rounded-2xl bg-aurum-gold/15 text-aurum-gold flex items-center justify-center mx-auto border border-aurum-gold/30 shadow-gold-glow">
+                <Coins className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-serif-luxury text-xl font-bold text-aurum-text">
+                  {language === 'bn' ? 'ভল্টে এখনো কোনো স্বর্ণ জমা নেই' : 'No Allocated Gold in Vault Yet'}
+                </h4>
+                <p className="text-xs text-aurum-text-muted max-w-md mx-auto leading-relaxed">
+                  {language === 'bn'
+                    ? 'আপনার সার্বভৌম স্বর্ণ ভল্ট সক্রিয়। ৳৫০০ থেকে ০% মেকিং চার্জে শুরু করুন আপনার প্রথম স্বর্ণ সঞ্চয়।'
+                    : 'Start your wealth reserve today from ৳500 (0.1g) with zero making charges, guaranteed BAJUS benchmark rates, and instant bKash settlement.'}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <a
+                  href="/trade"
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-aurum-gold via-aurum-gold-light to-aurum-gold hover:brightness-110 text-aurum-midnight font-bold text-xs shadow-gold-glow border border-aurum-gold/40 transition-all flex items-center space-x-2"
+                >
+                  <Coins className="w-4 h-4" />
+                  <span>{language === 'bn' ? '২৪K স্বর্ণ কিনুন' : 'Buy 24K Gold Bullion'}</span>
+                </a>
+                <a
+                  href="/dashboard/auto-save"
+                  className="px-5 py-3 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/40 text-aurum-text font-bold text-xs transition-all flex items-center space-x-2"
+                >
+                  <Repeat className="w-4 h-4 text-aurum-gold" />
+                  <span>{language === 'bn' ? 'অটোসেভ কিস্তি চালু করুন' : 'Start AutoSave (SIP)'}</span>
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="py-6 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 rounded-2xl bg-aurum-surface/80 border border-aurum-border">
+                  <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim font-bold block">
+                    {language === 'bn' ? 'মোট সংরক্ষিত ওজন' : 'Verified Weight'}
+                  </span>
+                  <span className="text-2xl font-bold font-mono text-aurum-gold mt-1 block">
+                    {formatLocalizedGold(totalGrams)}
+                  </span>
+                  <span className="text-[11px] text-aurum-text-muted mt-0.5 block">
+                    ≈ {toLocalizedDigits(totalBhori)} {language === 'bn' ? 'ভরি' : 'Bhori'}
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-aurum-surface/80 border border-aurum-border">
+                  <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim font-bold block">
+                    {language === 'bn' ? 'লাইভ বাজার মূল্য' : 'Current Valuation'}
+                  </span>
+                  <span className="text-2xl font-bold font-mono text-aurum-text mt-1 block">
+                    {formatLocalizedBDT(totalValuation)}
+                  </span>
+                  <span className="text-[11px] text-emerald-400 mt-0.5 block font-mono">
+                    {language === 'bn' ? 'বাজুস লাইভ মূল্যায়নে' : 'Real-Time Benchmark'}
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-aurum-surface/80 border border-aurum-border">
+                  <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim font-bold block">
+                    {language === 'bn' ? 'অর্জিত লাভ / বৃদ্ধি' : 'Unrealized Growth'}
+                  </span>
+                  <span className="text-2xl font-bold font-mono text-emerald-400 mt-1 block">
+                    +{formatLocalizedBDT(portfolio?.unrealizedGainLossBdt || 0)}
+                  </span>
+                  <span className="text-[11px] text-aurum-text-muted mt-0.5 block">
+                    ({toLocalizedDigits(portfolio?.unrealizedGainLossPercentage || 0)}%)
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-aurum-border/60">
+                <span className="text-xs text-aurum-text-muted">
+                  {language === 'bn' ? 'প্রকৃত ভল্ট কাস্টডিতে সংরক্ষিত ও সুরক্ষিত।' : 'Segregated bullion custody confirmed in Dhaka vault ledger.'}
+                </span>
+                <div className="flex items-center space-x-2">
+                  <a
+                    href="/dashboard/portfolio"
+                    className="px-4 py-2 rounded-xl bg-aurum-surface hover:bg-aurum-card border border-aurum-border text-xs font-bold text-aurum-text transition-all"
+                  >
+                    {language === 'bn' ? 'বিস্তারিত পোর্টফোলিও' : 'Detailed Analytics'}
+                  </a>
+                  <a
+                    href="/trade"
+                    className="px-4 py-2 rounded-xl bg-aurum-gold hover:brightness-110 text-aurum-midnight text-xs font-bold shadow-gold-glow transition-all"
+                  >
+                    {language === 'bn' ? 'আরও স্বর্ণ কিনুন' : 'Trade Desk'}
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Purity Breakdown Cards */}

@@ -37,8 +37,8 @@ export default function GoldGiftingPage() {
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [weightGrams, setWeightGrams] = useState<number>(1.0);
   const [message, setMessage] = useState('');
-  const [availableGoldMg, setAvailableGoldMg] = useState(5832);
-  const [currentRateBdt, setCurrentRateBdt] = useState(11500);
+  const [availableGoldMg, setAvailableGoldMg] = useState(0);
+  const [currentRateBdt, setCurrentRateBdt] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export default function GoldGiftingPage() {
     try {
       const [portfolioRes, priceRes, receivedRes, sentRes] = await Promise.all([
         apiRequest<{ success: boolean; data: any }>('/portfolio').catch(() => null),
-        apiRequest<{ success: boolean; data: any }>('/prices/live').catch(() => null),
+        apiRequest<{ success: boolean; data: any }>('/gold/prices').catch(() => null),
         apiRequest<{ success: boolean; data: any[] }>('/gifts/received').catch(() => null),
         apiRequest<{ success: boolean; data: any[] }>('/gifts/sent').catch(() => null),
       ]);
@@ -66,9 +66,8 @@ export default function GoldGiftingPage() {
       }
 
       if (priceRes?.success && priceRes.data) {
-        const k24Rate = Array.isArray(priceRes.data)
-          ? priceRes.data.find((p: any) => p.purity === '24K')
-          : priceRes.data;
+        const priceList = Array.isArray(priceRes.data) ? priceRes.data : [priceRes.data];
+        const k24Rate = priceList.find((p: any) => p.purity === '24K') || priceList[0];
         if (k24Rate?.sellPricePerGramBdt) {
           setCurrentRateBdt(k24Rate.sellPricePerGramBdt);
         }

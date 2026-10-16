@@ -3,9 +3,9 @@ import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from '../lib/theme-context';
 import { AuthProvider } from '../lib/auth-context';
 import { LanguageProvider } from '../lib/language-context';
-import Navbar from '../components/Navbar';
+import AppTopBar from '../components/navigation/AppTopBar';
 import Footer from '../components/Footer';
-import MobileNavDock from '../components/MobileNavDock';
+import ResponsiveBottomNav from '../components/navigation/ResponsiveBottomNav';
 import AiAssistantModal from '../components/AiAssistantModal';
 
 export const metadata: Metadata = {
@@ -36,14 +36,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark scroll-smooth" suppressHydrationWarning>
-      <body className="bg-aurum-midnight text-aurum-text antialiased selection:bg-aurum-gold selection:text-aurum-midnight flex flex-col min-h-screen pb-14 md:pb-0">
+      <body className="bg-aurum-midnight text-aurum-text antialiased selection:bg-aurum-gold selection:text-aurum-midnight flex flex-col min-h-screen pb-16 md:pb-0">
         <LanguageProvider>
           <ThemeProvider>
             <AuthProvider>
-              <Navbar />
+              <AppTopBar />
               <main className="flex-1">{children}</main>
               <Footer />
-              <MobileNavDock />
+              <ResponsiveBottomNav />
               <AiAssistantModal />
             </AuthProvider>
           </ThemeProvider>

@@ -59,12 +59,16 @@ export default function PortfolioInsightsPage() {
     try {
       const [portRes, priceRes] = await Promise.all([
         apiRequest<{ success: boolean; data: any }>('/portfolio'),
-        apiRequest<{ success: boolean; data: any }>('/prices/rates'),
+        apiRequest<{ success: boolean; data: any[] }>('/gold/prices'),
       ]);
 
       const holdings = portRes.success && portRes.data?.holdings ? portRes.data.holdings : [];
-      const live24K = priceRes.success && priceRes.data?.rates ? priceRes.data.rates['24K']?.buyPricePerGramBdt || 12450 : 12450;
-      const live22K = priceRes.success && priceRes.data?.rates ? priceRes.data.rates['22K']?.buyPricePerGramBdt || 11420 : 11420;
+      const rate24K = priceRes.success && Array.isArray(priceRes.data)
+        ? priceRes.data.find((r: any) => r.purity === '24K')?.buyPricePerGramBdt || 12450
+        : 12450;
+      const rate22K = priceRes.success && Array.isArray(priceRes.data)
+        ? priceRes.data.find((r: any) => r.purity === '22K')?.buyPricePerGramBdt || 11412
+        : 11412;
 
       let totalMg = 0;
       let totalInvestedPoisha = 0;
@@ -74,7 +78,7 @@ export default function PortfolioInsightsPage() {
         const grams = (h.weightMilligramsAvailable || 0) / 1000;
         const bhori = Number((grams / 11.664).toFixed(3));
         const investedBdt = (h.totalCostPoisha || 0) / 100;
-        const liveRate = h.purity === '22K' ? live22K : live24K;
+        const liveRate = h.purity === '22K' ? rate22K : rate24K;
         const currentValueBdt = Math.round(grams * liveRate);
         const avgCost = grams > 0 ? Math.round(investedBdt / grams) : 0;
         const gainBdt = currentValueBdt - investedBdt;
@@ -96,24 +100,6 @@ export default function PortfolioInsightsPage() {
           unrealizedGainPct: gainPct,
         };
       });
-
-      // Default demo allocation if new user
-      if (mappedHoldings.length === 0) {
-        mappedHoldings.push({
-          purity: '24K',
-          weightGrams: 5.832,
-          weightBhori: 0.5,
-          investedBdt: 70000,
-          currentValueBdt: Math.round(5.832 * live24K),
-          avgCostPerGramBdt: 12002,
-          liveRatePerGramBdt: live24K,
-          unrealizedGainBdt: Math.round(5.832 * live24K) - 70000,
-          unrealizedGainPct: Number((((Math.round(5.832 * live24K) - 70000) / 70000) * 100).toFixed(2)),
-        });
-        totalMg = 5832;
-        totalInvestedPoisha = 7000000;
-        totalCurrentValuationBdt = Math.round(5.832 * live24K);
-      }
 
       const totalGrams = Number((totalMg / 1000).toFixed(3));
       const totalBhori = Number((totalGrams / 11.664).toFixed(3));
@@ -275,58 +261,79 @@ export default function PortfolioInsightsPage() {
           </Badge>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-aurum-border text-aurum-text-dim uppercase font-mono tracking-wider">
-                <th className="py-3 px-4 font-bold">{language === 'bn' ? 'বিশুদ্ধতা (ক্যারেট)' : 'Purity Grade'}</th>
-                <th className="py-3 px-4 font-bold">{language === 'bn' ? 'ওজন (গ্রাম / ভরি)' : 'Gold Weight'}</th>
-                <th className="py-3 px-4 font-bold">{language === 'bn' ? 'গড় ক্রয়মূল্য/গ্রাম' : 'Avg Cost / Gram'}</th>
-                <th className="py-3 px-4 font-bold">{language === 'bn' ? 'বর্তমান দর/গ্রাম' : 'Live Benchmark'}</th>
-                <th className="py-3 px-4 font-bold">{language === 'bn' ? 'বর্তমান মূল্য' : 'Current Value'}</th>
-                <th className="py-3 px-4 font-bold text-right">{language === 'bn' ? 'লাভ / ক্ষতি' : 'Net P&L'}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-aurum-border/60 font-mono">
-              {portfolio?.holdings.map((h, idx) => {
-                const gainPositive = h.unrealizedGainBdt >= 0;
-                return (
-                  <tr key={idx} className="hover:bg-aurum-surface/40 transition-colors">
-                    <td className="py-4 px-4 font-bold text-aurum-gold">
-                      <span className="flex items-center space-x-1.5">
-                        <Layers className="w-3.5 h-3.5" />
-                        <span>{h.purity} Gold</span>
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 font-bold text-aurum-text">
-                      {formatLocalizedGold(h.weightGrams)}
-                      <span className="text-aurum-text-dim font-normal block text-[10px]">
-                        ≈ {toLocalizedDigits(h.weightBhori)} {language === 'bn' ? 'ভরি' : 'Bhori'}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-aurum-text">
-                      {formatLocalizedBDT(h.avgCostPerGramBdt)}
-                    </td>
-                    <td className="py-4 px-4 text-aurum-gold font-bold">
-                      {formatLocalizedBDT(h.liveRatePerGramBdt)}
-                    </td>
-                    <td className="py-4 px-4 font-bold text-aurum-text">
-                      {formatLocalizedBDT(h.currentValueBdt)}
-                    </td>
-                    <td className={`py-4 px-4 text-right font-bold ${gainPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {gainPositive ? '+' : ''}
-                      {formatLocalizedBDT(h.unrealizedGainBdt)}
-                      <span className="block text-[10px] font-normal">
-                        ({gainPositive ? '+' : ''}
-                        {toLocalizedDigits(h.unrealizedGainPct)}%)
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        {(!portfolio?.holdings || portfolio.holdings.length === 0) ? (
+          <div className="py-12 text-center space-y-3">
+            <Coins className="w-10 h-10 text-aurum-gold/40 mx-auto" />
+            <h4 className="text-base font-bold text-aurum-text">
+              {language === 'bn' ? 'কোনো স্বর্ণ জমা নেই' : 'No Bullion Holdings Yet'}
+            </h4>
+            <p className="text-xs text-aurum-text-muted max-w-sm mx-auto">
+              {language === 'bn'
+                ? 'আপনার ব্যক্তিগত ভল্ট সক্রিয়। ৳৫০০ থেকে আপনার প্রথম স্বর্ণ সঞ্চয় শুরু করুন।'
+                : 'Your personal vault is active. Begin accumulating pure bullion from ৳500.'}
+            </p>
+            <a
+              href="/trade"
+              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-aurum-gold text-aurum-midnight font-bold text-xs shadow-gold-glow hover:brightness-110 transition-all"
+            >
+              <span>{language === 'bn' ? 'স্বর্ণ ক্রয় করুন' : 'Buy 24K Gold Bullion'}</span>
+              <ArrowUpRight className="w-4 h-4" />
+            </a>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-aurum-border text-aurum-text-dim uppercase font-mono tracking-wider">
+                  <th className="py-3 px-4 font-bold">{language === 'bn' ? 'বিশুদ্ধতা (ক্যারেট)' : 'Purity Grade'}</th>
+                  <th className="py-3 px-4 font-bold">{language === 'bn' ? 'ওজন (গ্রাম / ভরি)' : 'Gold Weight'}</th>
+                  <th className="py-3 px-4 font-bold">{language === 'bn' ? 'গড় ক্রয়মূল্য/গ্রাম' : 'Avg Cost / Gram'}</th>
+                  <th className="py-3 px-4 font-bold">{language === 'bn' ? 'বর্তমান দর/গ্রাম' : 'Live Benchmark'}</th>
+                  <th className="py-3 px-4 font-bold">{language === 'bn' ? 'বর্তমান মূল্য' : 'Current Value'}</th>
+                  <th className="py-3 px-4 font-bold text-right">{language === 'bn' ? 'লাভ / ক্ষতি' : 'Net P&L'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-aurum-border/60 font-mono">
+                {portfolio?.holdings.map((h, idx) => {
+                  const gainPositive = h.unrealizedGainBdt >= 0;
+                  return (
+                    <tr key={idx} className="hover:bg-aurum-surface/40 transition-colors">
+                      <td className="py-4 px-4 font-bold text-aurum-gold">
+                        <span className="flex items-center space-x-1.5">
+                          <Layers className="w-3.5 h-3.5" />
+                          <span>{h.purity} Gold</span>
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 font-bold text-aurum-text">
+                        {formatLocalizedGold(h.weightGrams)}
+                        <span className="text-aurum-text-dim font-normal block text-[10px]">
+                          ≈ {toLocalizedDigits(h.weightBhori)} {language === 'bn' ? 'ভরি' : 'Bhori'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-aurum-text">
+                        {formatLocalizedBDT(h.avgCostPerGramBdt)}
+                      </td>
+                      <td className="py-4 px-4 text-aurum-gold font-bold">
+                        {formatLocalizedBDT(h.liveRatePerGramBdt)}
+                      </td>
+                      <td className="py-4 px-4 font-bold text-aurum-text">
+                        {formatLocalizedBDT(h.currentValueBdt)}
+                      </td>
+                      <td className={`py-4 px-4 text-right font-bold ${gainPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {gainPositive ? '+' : ''}
+                        {formatLocalizedBDT(h.unrealizedGainBdt)}
+                        <span className="block text-[10px] font-normal">
+                          ({gainPositive ? '+' : ''}
+                          {toLocalizedDigits(h.unrealizedGainPct)}%)
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Custody & Security Trust Card */}
@@ -337,12 +344,12 @@ export default function PortfolioInsightsPage() {
           </div>
           <div>
             <h4 className="font-bold text-sm text-aurum-text">
-              {language === 'bn' ? 'ব্যাংক-গ্রেড সিকিউরড ভল্ট' : 'Secured Bank-Grade Vaults'}
+              {language === 'bn' ? 'সেগ্রিগেটেড ভল্ট কাস্টডি' : 'Segregated Vault Custody'}
             </h4>
             <p className="text-xs text-aurum-text-muted mt-1 leading-relaxed">
               {language === 'bn'
-                ? 'আপনার স্বর্ণ ঢাকার মতিঝিল ও চট্টগ্রামের সেন্ট্রাল ভল্টে সম্পূর্ণ বীমাকৃত অবস্থায় সংরক্ষিত।'
-                : 'Bullion physically custody-secured in audited bank vault facilities across Dhaka & Chittagong.'}
+                ? 'আপনার স্বর্ণ স্বতন্ত্র গ্রাহক অ্যাকাউন্টে সংরক্ষিত, যা কখনোই ঋণ হিসেবে ব্যবহৃত হয় না।'
+                : 'Customer bullion is held in segregated custody accounts and never re-hypothecated or lent out.'}
             </p>
           </div>
         </div>
@@ -353,12 +360,12 @@ export default function PortfolioInsightsPage() {
           </div>
           <div>
             <h4 className="font-bold text-sm text-aurum-text">
-              {language === 'bn' ? '১০০% বীমা সুরক্ষা' : '100% Comprehensive Insurance'}
+              {language === 'bn' ? 'ক্রিপ্টোগ্রাফিক ডাবল-এন্ট্রি লেজার' : 'Double-Entry Cryptographic Ledger'}
             </h4>
             <p className="text-xs text-aurum-text-muted mt-1 leading-relaxed">
               {language === 'bn'
-                ? 'প্রতিটি মিলিগ্রাম স্বর্ণ গ্রীন ডেল্টা ইন্স্যুরেন্স পিএলসি দ্বারা সম্পূর্ণ আর্থিক ক্ষতি হতে সুরক্ষিত।'
-                : 'Every single milligram is fully covered under an institutional custody insurance policy.'}
+                ? 'প্রতিটি মিলিগ্রাম ক্রয় ও বিক্রয় অপরিবর্তনীয় ডিজিটাল লেজারে সংরক্ষিত।'
+                : 'Every milligram buy, sell, or transfer transaction is sealed in an auditable double-entry journal.'}
             </p>
           </div>
         </div>
@@ -369,12 +376,12 @@ export default function PortfolioInsightsPage() {
           </div>
           <div>
             <h4 className="font-bold text-sm text-aurum-text">
-              {language === 'bn' ? 'শূন্য ভল্ট চার্জ' : 'Zero Storage & Custody Fees'}
+              {language === 'bn' ? 'স্বচ্ছ ফি ও শূন্য ভল্ট চার্জ' : 'Zero Recurring Storage Fees'}
             </h4>
             <p className="text-xs text-aurum-text-muted mt-1 leading-relaxed">
               {language === 'bn'
-                ? 'কোনো মাসিক বা বার্ষিক রক্ষণাবেক্ষণ চার্জ নেই। সম্পূর্ণ আজীবন বিনামূল্যে ভল্ট সুরক্ষা।'
-                : 'Transparent fintech pricing: 100% free physical vault storage for all registered AurumSave clients.'}
+                ? 'কোনো মাসিক বা বার্ষিক গোপন চার্জ নেই। শুধুমাত্র স্বচ্ছ ০.৫% লেনদেন ফি।'
+                : 'Transparent fintech pricing: zero recurring storage charges, with a single 0.5% custody fee on orders.'}
             </p>
           </div>
         </div>

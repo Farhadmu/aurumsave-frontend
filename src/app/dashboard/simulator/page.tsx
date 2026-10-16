@@ -31,9 +31,10 @@ export default function WhatIfSimulatorPage() {
 
   const fetchLiveRate = async () => {
     try {
-      const res = await apiRequest<{ success: boolean; data: any }>('/prices/rates');
-      if (res.success && res.data?.rates) {
-        setLiveRate24K(res.data.rates['24K']?.buyPricePerGramBdt || 12450);
+      const res = await apiRequest<{ success: boolean; data: any[] }>('/gold/prices');
+      if (res.success && Array.isArray(res.data)) {
+        const rate24K = res.data.find((r: any) => r.purity === '24K')?.buyPricePerGramBdt;
+        if (rate24K) setLiveRate24K(rate24K);
       }
     } catch {
       setLiveRate24K(12450);

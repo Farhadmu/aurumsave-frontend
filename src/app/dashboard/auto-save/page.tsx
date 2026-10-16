@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../../lib/language-context';
+import { apiRequest } from '../../../lib/api';
 import { Badge } from '../../../components/ui/Badge';
+import { Skeleton } from '../../../components/ui/Skeleton';
 import {
   Repeat,
   Plus,
@@ -17,44 +19,28 @@ import {
   AlertCircle,
   X,
   CreditCard,
+  RefreshCw,
 } from 'lucide-react';
 
 interface AutoSavePlan {
-  id: string;
+  _id?: string;
+  planId: string;
   title: string;
   frequency: 'daily' | 'weekly' | 'monthly';
-  amountBdt: number;
-  accumulatedGrams: number;
-  nextDebitDate: string;
-  status: 'active' | 'paused';
+  amountPoisha?: number;
+  amountBdt?: number;
+  accumulatedGoldMg?: number;
+  nextDebitDate?: string;
+  status: 'active' | 'paused' | 'cancelled';
   paymentMethod: string;
 }
 
 export default function AutoSavePage() {
   const { language, toLocalizedDigits, formatLocalizedBDT, formatLocalizedGold } = useLanguage();
 
-  const [plans, setPlans] = useState<AutoSavePlan[]>([
-    {
-      id: 'SIP-1001',
-      title: language === 'bn' ? 'মাসিক সার্বভৌম স্বর্ণ কিস্তি' : 'Monthly Sovereign Gold SIP',
-      frequency: 'monthly',
-      amountBdt: 5000,
-      accumulatedGrams: 2.45,
-      nextDebitDate: '2026-11-01',
-      status: 'active',
-      paymentMethod: 'bKash (01700-XXXXXX)',
-    },
-    {
-      id: 'SIP-1002',
-      title: language === 'bn' ? 'সাপ্তাহিক ক্ষুদ্র স্বর্ণ সঞ্চয়' : 'Weekly Micro-Gold Savings',
-      frequency: 'weekly',
-      amountBdt: 1200,
-      accumulatedGrams: 0.89,
-      nextDebitDate: '2026-10-21',
-      status: 'active',
-      paymentMethod: 'Nagad (01800-XXXXXX)',
-    },
-  ]);
+  const [plans, setPlans] = useState<AutoSavePlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -62,41 +48,86 @@ export default function AutoSavePage() {
   const [newAmountBdt, setNewAmountBdt] = useState<number>(3000);
   const [newPaymentMethod, setNewPaymentMethod] = useState('bKash');
   const [consentChecked, setConsentChecked] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const togglePlanStatus = (id: string) => {
-    setPlans((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, status: p.status === 'active' ? 'paused' : 'active' } : p,
-      ),
-    );
+  const fetchPlans = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiRequest<{ success: boolean; data: any[] }>('/goals/plans');
+      if (res.success && Array.isArray(res.data)) {
+        const normalized = res.data.map((p) => ({
+          ...p,
+          amountBdt: typeof p.amountBdt === 'number' ? p.amountBdt : (p.amountPoisha || 0) / 100,
+        }));
+        setPlans(normalized);
+      } else {
+        setPlans([]);
+      }
+    } catch (err: any) {
+      console.error('Failed to load AutoSave plans:', err);
+      setError('Unable to load recurring AutoSave SIP plans.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deletePlan = (id: string) => {
-    setPlans((prev) => prev.filter((p) => p.id !== id));
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const togglePlanStatus = async (plan: AutoSavePlan) => {
+    const nextStatus = plan.status === 'active' ? 'paused' : 'active';
+    try {
+      await apiRequest(`/goals/plans/${plan.planId || plan._id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      await fetchPlans();
+    } catch (err: any) {
+      alert(err.message || 'Failed to update plan status');
+    }
   };
 
-  const handleCreatePlan = (e: React.FormEvent) => {
+  const deletePlan = async (plan: AutoSavePlan) => {
+    if (!confirm('Are you sure you want to cancel this recurring gold savings plan?')) return;
+    try {
+      await apiRequest(`/goals/plans/${plan.planId || plan._id}`, {
+        method: 'DELETE',
+      });
+      await fetchPlans();
+    } catch (err: any) {
+      alert(err.message || 'Failed to cancel plan');
+    }
+  };
+
+  const handleCreatePlan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !consentChecked) return;
 
-    const nextDate = new Date();
-    nextDate.setDate(nextDate.getDate() + (newFrequency === 'daily' ? 1 : newFrequency === 'weekly' ? 7 : 30));
+    setIsSubmitting(true);
+    try {
+      const res = await apiRequest('/goals/plans', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: newTitle.trim(),
+          frequency: newFrequency,
+          amountBdt: Number(newAmountBdt),
+          paymentMethod: `${newPaymentMethod} Autodebit`,
+        }),
+      });
 
-    const newPlan: AutoSavePlan = {
-      id: `SIP-${Math.floor(1000 + Math.random() * 9000)}`,
-      title: newTitle.trim(),
-      frequency: newFrequency,
-      amountBdt: Number(newAmountBdt),
-      accumulatedGrams: 0,
-      nextDebitDate: nextDate.toISOString().split('T')[0],
-      status: 'active',
-      paymentMethod: `${newPaymentMethod} Autodebit`,
-    };
-
-    setPlans((prev) => [newPlan, ...prev]);
-    setShowModal(false);
-    setNewTitle('');
-    setConsentChecked(false);
+      if (res.success) {
+        setShowModal(false);
+        setNewTitle('');
+        setConsentChecked(false);
+        await fetchPlans();
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to create AutoSave plan');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -120,227 +151,275 @@ export default function AutoSavePage() {
 
         <button
           onClick={() => setShowModal(true)}
-          className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-aurum-gold hover:brightness-110 text-aurum-midnight text-xs font-bold transition-all shadow-gold-glow"
+          className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-aurum-gold hover:brightness-110 text-aurum-midnight text-xs font-bold transition-all shadow-gold-glow self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 stroke-[3]" />
           <span>{language === 'bn' ? 'নতুন অটোসেভ প্ল্যান তৈরি করুন' : 'Create AutoSave Plan'}</span>
         </button>
       </div>
 
-      {/* Plans List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {plans.map((plan) => (
-          <div
-            key={plan.id}
-            className="p-6 sm:p-7 rounded-3xl bg-aurum-card border border-aurum-border hover:border-aurum-gold/40 transition-all shadow-card-luxury space-y-5"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim block">
-                  {plan.id} • {plan.frequency.toUpperCase()}
-                </span>
-                <h3 className="text-lg font-bold text-aurum-text mt-0.5">{plan.title}</h3>
-              </div>
-              <Badge variant={plan.status === 'active' ? 'emerald' : 'amber'} size="sm">
-                {plan.status === 'active' ? (
-                  <span className="flex items-center space-x-1">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                    <span>{language === 'bn' ? 'সক্রিয়' : 'Active'}</span>
-                  </span>
-                ) : (
-                  <span>{language === 'bn' ? 'স্থগিত' : 'Paused'}</span>
-                )}
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-aurum-surface text-xs">
-              <div>
-                <span className="text-aurum-text-dim block text-[11px]">
-                  {language === 'bn' ? 'নির্ধারিত কিস্তি' : 'Contribution Amount'}:
-                </span>
-                <span className="text-lg font-bold text-aurum-gold font-mono block mt-0.5">
-                  {formatLocalizedBDT(plan.amountBdt)}
-                </span>
-                <span className="text-[10px] text-aurum-text-muted capitalize">
-                  {plan.frequency}
-                </span>
-              </div>
-
-              <div>
-                <span className="text-aurum-text-dim block text-[11px]">
-                  {language === 'bn' ? 'মোট সংগৃহীত স্বর্ণ' : 'Gold Accumulated'}:
-                </span>
-                <span className="text-lg font-bold text-aurum-text font-mono block mt-0.5">
-                  {formatLocalizedGold(plan.accumulatedGrams)}
-                </span>
-                <span className="text-[10px] text-aurum-text-dim">
-                  ≈ {toLocalizedDigits(Number((plan.accumulatedGrams / 11.664).toFixed(3)))} {language === 'bn' ? 'ভরি' : 'Bhori'}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-aurum-text-muted pt-1">
-              <span className="flex items-center space-x-1.5">
-                <Clock className="w-3.5 h-3.5 text-aurum-gold" />
-                <span>
-                  {language === 'bn' ? 'পরবর্তী কিস্তির তারিখ: ' : 'Next Debit: '}
-                  <strong className="text-aurum-text font-mono">{plan.nextDebitDate}</strong>
-                </span>
-              </span>
-              <span className="text-[11px] font-mono text-aurum-text-dim">
-                {plan.paymentMethod}
-              </span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center space-x-2 pt-2 border-t border-aurum-border/60">
-              <button
-                onClick={() => togglePlanStatus(plan.id)}
-                className="flex-1 py-2 rounded-xl bg-aurum-surface hover:bg-aurum-surface/80 border border-aurum-border text-xs font-bold text-aurum-text transition-all flex items-center justify-center space-x-1.5"
-              >
-                {plan.status === 'active' ? (
-                  <>
-                    <Pause className="w-3.5 h-3.5 text-amber-400" />
-                    <span>{language === 'bn' ? 'স্থগিত করুন' : 'Pause Plan'}</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{language === 'bn' ? 'পুনরায় চালু করুন' : 'Resume Plan'}</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={() => deletePlan(plan.id)}
-                className="p-2 rounded-xl bg-aurum-surface hover:bg-rose-950/40 border border-aurum-border text-aurum-text-muted hover:text-rose-400 transition-all"
-                title="Cancel Plan"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Operational Staging Notice */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-aurum-surface/40 border border-aurum-border/60 text-xs text-aurum-text-muted flex items-start space-x-3">
-        <Shield className="w-4 h-4 text-aurum-gold shrink-0 mt-0.5" />
-        <div className="leading-relaxed">
-          <strong className="text-aurum-text block mb-0.5">
-            {language === 'bn' ? 'এমএফএস অটো-ডেবিট রেগুলেশন ও স্বচ্ছতা' : 'MFS Auto-Debit Standing Mandate'}
-          </strong>
-          {language === 'bn'
-            ? 'বাংলাদেশ ব্যাংক ও এমএফএস নিয়মানুযায়ী প্রতিটি অটোসেভ কিস্তির পূর্বে আপনার ফোনে এসএমএস নোটিফিকেশন প্রদান করা হয়। আপনি যেকোনো সময় কোনো পেনাল্টি ছাড়াই প্ল্যানটি বাতিল বা স্থগিত করতে পারেন।'
-            : 'Per Bangladesh Bank and MFS regulations, automated debits require an authorized recurring token. You can pause or cancel recurring plans at any time with zero penalty.'}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-48 rounded-3xl" />
+          <Skeleton className="h-48 rounded-3xl" />
         </div>
-      </div>
-
-      {/* Create AutoSave Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-aurum-card border border-aurum-border rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-4 border-b border-aurum-border">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-9 h-9 rounded-xl bg-aurum-gold/15 text-aurum-gold flex items-center justify-center">
-                  <Repeat className="w-5 h-5" />
+      ) : error ? (
+        <div className="p-8 rounded-3xl bg-aurum-card border border-aurum-border text-center space-y-3">
+          <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
+          <h4 className="text-base font-bold text-aurum-text">{error}</h4>
+          <button
+            onClick={fetchPlans}
+            className="text-xs text-aurum-gold font-bold hover:underline inline-flex items-center space-x-1"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Retry</span>
+          </button>
+        </div>
+      ) : plans.length === 0 ? (
+        <div className="p-10 sm:p-14 rounded-3xl bg-aurum-card border border-aurum-border text-center space-y-4 shadow-card-luxury">
+          <div className="w-14 h-14 rounded-2xl bg-aurum-gold/15 text-aurum-gold flex items-center justify-center mx-auto border border-aurum-gold/30">
+            <Repeat className="w-7 h-7" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-serif-luxury text-xl font-bold text-aurum-text">
+              {language === 'bn' ? 'কোনো অটোসেভ প্ল্যান সক্রিয় নেই' : 'No Recurring AutoSave Plans Yet'}
+            </h3>
+            <p className="text-xs text-aurum-text-muted max-w-md mx-auto leading-relaxed">
+              {language === 'bn'
+                ? 'স্বয়ংক্রিয়ভাবে প্রতিদিন, প্রতি সপ্তাহে বা প্রতি মাসে নির্দিষ্ট কিস্তিতে খাঁটি স্বর্ণ জমা করুন।'
+                : 'Automate micro-gold savings starting from ৳500 with automated debit mandates and zero making charges.'}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center space-x-2 px-6 py-3 rounded-xl bg-aurum-gold hover:brightness-110 text-aurum-midnight font-bold text-xs shadow-gold-glow transition-all"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>{language === 'bn' ? 'প্রথম প্ল্যান শুরু করুন' : 'Start Your First Plan'}</span>
+          </button>
+        </div>
+      ) : (
+        /* Plans List */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {plans.map((plan) => {
+            const grams = (plan.accumulatedGoldMg || 0) / 1000;
+            const bhori = Number((grams / 11.664).toFixed(3));
+            return (
+              <div
+                key={plan.planId || plan._id}
+                className="p-6 sm:p-7 rounded-3xl bg-aurum-card border border-aurum-border hover:border-aurum-gold/40 transition-all shadow-card-luxury space-y-5"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim block">
+                      {plan.planId} • {plan.frequency.toUpperCase()}
+                    </span>
+                    <h3 className="text-lg font-bold text-aurum-text mt-0.5">{plan.title}</h3>
+                  </div>
+                  <Badge variant={plan.status === 'active' ? 'emerald' : 'amber'} size="sm">
+                    {plan.status === 'active' ? (
+                      <span className="flex items-center space-x-1">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        <span>{language === 'bn' ? 'সক্রিয়' : 'Active'}</span>
+                      </span>
+                    ) : (
+                      <span>{language === 'bn' ? 'স্থগিত' : 'Paused'}</span>
+                    )}
+                  </Badge>
                 </div>
-                <h3 className="text-lg font-bold text-aurum-text font-serif-luxury">
-                  {language === 'bn' ? 'নতুন অটোসেভ প্ল্যান কনফিগার' : 'New AutoSave SIP Plan'}
-                </h3>
+
+                <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-aurum-surface text-xs">
+                  <div>
+                    <span className="text-aurum-text-dim block text-[11px]">
+                      {language === 'bn' ? 'নির্ধারিত কিস্তি' : 'Contribution Amount'}:
+                    </span>
+                    <span className="text-lg font-bold text-aurum-gold font-mono block mt-0.5">
+                      {formatLocalizedBDT(plan.amountBdt || 0)}
+                    </span>
+                    <span className="text-[10px] text-aurum-text-muted capitalize">
+                      {plan.frequency}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-aurum-text-dim block text-[11px]">
+                      {language === 'bn' ? 'মোট সংগৃহীত স্বর্ণ' : 'Gold Accumulated'}:
+                    </span>
+                    <span className="text-lg font-bold text-aurum-text font-mono block mt-0.5">
+                      {formatLocalizedGold(grams)}
+                    </span>
+                    <span className="text-[10px] text-aurum-text-dim">
+                      ≈ {toLocalizedDigits(bhori)} {language === 'bn' ? 'ভরি' : 'Bhori'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-aurum-text-muted pt-1">
+                  <span className="flex items-center space-x-1.5">
+                    <Clock className="w-3.5 h-3.5 text-aurum-gold" />
+                    <span>
+                      {language === 'bn' ? 'পরবর্তী কিস্তির তারিখ: ' : 'Next Debit: '}
+                      <strong className="text-aurum-text font-mono">
+                        {plan.nextDebitDate ? new Date(plan.nextDebitDate).toLocaleDateString() : 'Scheduled'}
+                      </strong>
+                    </span>
+                  </span>
+                  <span className="text-[11px] font-mono text-aurum-text-dim">
+                    {plan.paymentMethod}
+                  </span>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center space-x-2 pt-2 border-t border-aurum-border/60">
+                  <button
+                    onClick={() => togglePlanStatus(plan)}
+                    className="flex-1 py-2 rounded-xl bg-aurum-surface hover:bg-aurum-surface/80 border border-aurum-border text-xs font-bold text-aurum-text transition-all flex items-center justify-center space-x-1.5"
+                  >
+                    {plan.status === 'active' ? (
+                      <>
+                        <Pause className="w-3.5 h-3.5 text-amber-400" />
+                        <span>{language === 'bn' ? 'স্থগিত করুন' : 'Pause Plan'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{language === 'bn' ? 'পুনরায় চালু করুন' : 'Resume Plan'}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => deletePlan(plan)}
+                    className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-all"
+                    title="Cancel Plan"
+                    aria-label="Cancel Plan"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Creation Modal */}
+      {showModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-aurum-midnight/80 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-lg bg-aurum-card border border-aurum-border-gold rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-aurum-border pb-4">
+              <h3 className="font-serif-luxury text-xl font-bold text-aurum-text">
+                {language === 'bn' ? 'নতুন অটোসেভ প্ল্যান কনফিগার করুন' : 'Configure AutoSave Plan'}
+              </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-aurum-text-muted hover:text-aurum-text p-1 text-sm font-bold"
+                className="p-1 rounded-lg text-aurum-text-muted hover:text-aurum-text"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleCreatePlan} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-aurum-text mb-1.5">
-                  {language === 'bn' ? 'প্ল্যানের শিরোনাম' : 'Plan Title'}
+                <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block mb-1.5">
+                  {language === 'bn' ? 'প্ল্যানের নাম' : 'Plan Title'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={language === 'bn' ? 'যেমন: সন্তানের ভবিষ্যৎ স্বর্ণ সঞ্চয়' : 'e.g. Retirement Gold Reserve'}
+                  placeholder="e.g. Monthly Daughter Gold Trust"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-aurum-surface border border-aurum-border focus:border-aurum-gold text-aurum-text text-sm outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-aurum-surface border border-aurum-border text-sm text-aurum-text focus:outline-none focus:border-aurum-gold"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-aurum-text mb-1.5">
-                    {language === 'bn' ? 'কিস্তির সময়কাল' : 'Frequency'}
+                  <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block mb-1.5">
+                    {language === 'bn' ? 'কিস্তির মেয়াদ' : 'Debit Frequency'}
                   </label>
                   <select
                     value={newFrequency}
-                    onChange={(e) => setNewFrequency(e.target.value as any)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text text-sm outline-none"
+                    onChange={(e: any) => setNewFrequency(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-aurum-surface border border-aurum-border text-sm text-aurum-text focus:outline-none focus:border-aurum-gold"
                   >
-                    <option value="monthly">{language === 'bn' ? 'প্রতি মাসে' : 'Monthly'}</option>
-                    <option value="weekly">{language === 'bn' ? 'প্রতি সপ্তাহে' : 'Weekly'}</option>
-                    <option value="daily">{language === 'bn' ? 'প্রতি দিন (মাইক্রো)' : 'Daily Micro'}</option>
+                    <option value="daily">Daily (প্রতিদিন)</option>
+                    <option value="weekly">Weekly (সাপ্তাহিক)</option>
+                    <option value="monthly">Monthly (মাসিক)</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-aurum-text mb-1.5">
+                  <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block mb-1.5">
                     {language === 'bn' ? 'কিস্তির পরিমাণ (টাকা)' : 'Amount (BDT)'}
                   </label>
                   <input
                     type="number"
-                    min="500"
-                    step="500"
+                    min={500}
+                    step={100}
                     required
                     value={newAmountBdt}
-                    onChange={(e) => setNewAmountBdt(parseInt(e.target.value))}
-                    className="w-full px-3 py-2.5 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text text-sm outline-none font-mono"
+                    onChange={(e) => setNewAmountBdt(Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl bg-aurum-surface border border-aurum-border text-sm text-aurum-text font-mono focus:outline-none focus:border-aurum-gold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-aurum-text mb-1.5">
-                  {language === 'bn' ? 'পেমেন্ট চ্যানেল' : 'Payment Method'}
+                <label className="text-xs font-bold uppercase font-mono tracking-wider text-aurum-text-dim block mb-1.5">
+                  {language === 'bn' ? 'পেমেন্ট গেটওয়ে' : 'Payment Method'}
                 </label>
                 <select
                   value={newPaymentMethod}
                   onChange={(e) => setNewPaymentMethod(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text text-sm outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-aurum-surface border border-aurum-border text-sm text-aurum-text focus:outline-none focus:border-aurum-gold"
                 >
-                  <option value="bKash">bKash MFS Auto-Mandate</option>
-                  <option value="Nagad">Nagad Direct Debit</option>
-                  <option value="Card">Bangladeshi Visa / Mastercard</option>
+                  <option value="bKash">bKash MFS Direct Debit</option>
+                  <option value="Nagad">Nagad MFS Direct Debit</option>
+                  <option value="Rocket">Rocket DBBL Direct Debit</option>
+                  <option value="Bank Card">Visa / Mastercard Autodebit</option>
                 </select>
               </div>
 
-              <div className="p-3 rounded-xl bg-aurum-surface border border-aurum-border flex items-start space-x-2 text-xs">
-                <input
-                  type="checkbox"
-                  id="consent"
-                  checked={consentChecked}
-                  onChange={(e) => setConsentChecked(e.target.checked)}
-                  className="mt-0.5 accent-aurum-gold cursor-pointer"
-                />
-                <label htmlFor="consent" className="text-aurum-text-muted leading-tight cursor-pointer">
-                  {language === 'bn'
-                    ? 'আমি নির্দিষ্ট তারিখে উল্লেখিত পরিমাণ টাকা স্বয়ংক্রিয়ভাবে কেটে ২৪ ক্যারেট খাঁটি স্বর্ণ ক্রয়ের সম্মতি প্রদান করছি।'
-                    : 'I consent to scheduled recurring debits to purchase 24K allocated gold bullion at live benchmark rates.'}
+              {/* Autodebit Consent */}
+              <div className="pt-2">
+                <label className="flex items-start space-x-2.5 text-xs text-aurum-text-muted cursor-pointer">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={consentChecked}
+                    onChange={(e) => setConsentChecked(e.target.checked)}
+                    className="mt-0.5 rounded border-aurum-border text-aurum-gold focus:ring-aurum-gold"
+                  />
+                  <span>
+                    {language === 'bn'
+                      ? 'আমি AurumSave-কে নির্ধারিত দিনে উল্লেখিত পরিমাণ অর্থ ডেবিট করে ২৪K স্বর্ণ রূপান্তরের অনুমতি প্রদান করছি।'
+                      : 'I authorize AurumSave to execute recurring debits for conversion into allocated 24K bullion.'}
+                  </span>
                 </label>
               </div>
 
-              <button
-                type="submit"
-                disabled={!consentChecked || !newTitle.trim()}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-aurum-gold to-aurum-gold-light text-aurum-midnight font-bold text-sm shadow-gold-glow hover:brightness-110 disabled:opacity-50 transition-all"
-              >
-                {language === 'bn' ? 'অটোসেভ প্ল্যান সক্রিয় করুন' : 'Activate AutoSave Plan'}
-              </button>
+              <div className="pt-4 flex items-center justify-end space-x-3 border-t border-aurum-border/60">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-aurum-text-muted hover:text-aurum-text"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !consentChecked}
+                  className="px-6 py-2.5 rounded-xl bg-aurum-gold hover:brightness-110 text-aurum-midnight font-bold text-xs shadow-gold-glow transition-all disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Creating Plan...' : 'Confirm Plan'}
+                </button>
+              </div>
             </form>
           </div>
         </div>

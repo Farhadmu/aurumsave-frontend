@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { PurityGrade, CONVERSIONS } from '../shared';
-import { formatBDT, formatGoldWeight } from '../lib/utils';
+import React, { useState, useEffect } from 'react';
+import { PurityGrade, CONVERSIONS, LivePriceRate } from '../shared';
+import { formatBDT } from '../lib/utils';
+import { apiRequest } from '../lib/api';
 import { Badge } from './ui/Badge';
 import {
   Calculator,
@@ -12,15 +13,37 @@ import {
   TrendingUp,
   Percent,
   Coins,
+  Info,
 } from 'lucide-react';
 
 export default function GoldCalculator() {
   const [mode, setMode] = useState<'BDT' | 'GRAM'>('BDT');
   const [bdtAmount, setBdtAmount] = useState<number>(10000);
   const [purity, setPurity] = useState<PurityGrade>(PurityGrade.K24);
+  const [liveRates, setLiveRates] = useState<Record<string, number>>({});
+  const [ratesAvailable, setRatesAvailable] = useState<boolean>(false);
 
-  // Approximate live rates
-  const ratePerGram = purity === PurityGrade.K24 ? 12450 : 11412;
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const res = await apiRequest<{ success: boolean; data: LivePriceRate[] }>('/gold/prices');
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const map: Record<string, number> = {};
+          res.data.forEach((r) => {
+            map[r.purity] = r.buyPricePerGramBdt;
+          });
+          setLiveRates(map);
+          setRatesAvailable(true);
+        }
+      } catch {
+        setRatesAvailable(false);
+      }
+    };
+    fetchRates();
+  }, []);
+
+  // Use verified live rates or transparent fallback notice
+  const ratePerGram = liveRates[purity] || (purity === PurityGrade.K24 ? 12450 : 11412);
 
   const calculatedGrams =
     mode === 'BDT'
@@ -33,10 +56,6 @@ export default function GoldCalculator() {
   const calculatedBhori = (calculatedGrams / CONVERSIONS.GRAMS_PER_BHORI).toFixed(3);
   const estimatedPlatformFee = Math.round(totalCostBdt * 0.005); // 0.5%
   const grandTotal = totalCostBdt + estimatedPlatformFee;
-
-  // Projected 1Y and 3Y compounding based on historic 14.2% average gold inflation hedge in BD
-  const projected1YearBdt = Math.round(totalCostBdt * 1.142);
-  const projected3YearBdt = Math.round(totalCostBdt * Math.pow(1.142, 3));
 
   const presetAmounts = [1000, 5000, 10000, 25000, 50000, 100000];
 
@@ -53,14 +72,14 @@ export default function GoldCalculator() {
           <div className="flex items-center space-x-2 mb-2">
             <Badge variant="gold" pulse size="sm">
               <Sparkles className="w-3 h-3 mr-1" />
-              Interactive Accumulation Estimator
+              Accumulation Simulator
             </Badge>
           </div>
           <h3 className="font-serif-luxury text-2xl sm:text-4xl font-bold text-aurum-text tracking-tight">
-            Calculate Your Physical Bullion Reserve
+            Calculate Your Bullion Reserve
           </h3>
           <p className="text-xs sm:text-sm text-aurum-text-muted mt-1.5 max-w-xl">
-            Estimate grams accumulated from micro-deposits starting at ৳500 with zero integer-rounding drift.
+            Simulate physical gold accumulation based on your personal budget starting at ৳500 with zero rounding loss.
           </p>
         </div>
 
@@ -126,14 +145,14 @@ export default function GoldCalculator() {
             </div>
           </div>
 
-          {/* Large Interactive Input */}
+          {/* Interactive Input */}
           <div className="p-5 rounded-2xl bg-aurum-surface border border-aurum-border focus-within:border-aurum-gold/60 focus-within:ring-2 focus-within:ring-aurum-gold/20 transition-all">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-semibold text-aurum-text-muted">
-                {mode === 'BDT' ? 'Investment Amount (BDT)' : 'Target Gold Weight (Grams)'}
+                {mode === 'BDT' ? 'Budget Amount (BDT)' : 'Target Gold Weight (Grams)'}
               </span>
               <span className="text-xs font-mono text-aurum-gold font-bold">
-                Rate: ৳{ratePerGram.toLocaleString()}/g
+                {ratesAvailable ? `Live Rate: ৳${ratePerGram.toLocaleString()}/g` : `Benchmark Rate: ৳${ratePerGram.toLocaleString()}/g`}
               </span>
             </div>
             <div className="flex items-baseline space-x-2">
@@ -177,17 +196,12 @@ export default function GoldCalculator() {
             </div>
           </div>
 
-          {/* Inflation Projection Highlight */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-aurum-gold/10 border border-emerald-500/20 text-xs flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="text-aurum-text-muted">
-                Historic 1-Year Projected Valuation (+14.2% hedge):
-              </span>
-            </div>
-            <span className="font-mono font-bold text-emerald-400 text-sm">
-              {formatBDT(projected1YearBdt)}
-            </span>
+          {/* Hypothetical Projection Disclaimer */}
+          <div className="p-4 rounded-2xl bg-aurum-surface/50 border border-aurum-border text-xs flex items-start space-x-2.5">
+            <Info className="w-4 h-4 text-aurum-gold shrink-0 mt-0.5" />
+            <p className="text-aurum-text-muted leading-relaxed">
+              <strong className="text-aurum-text">Hypothetical Simulation:</strong> Gold is a physical commodity whose market price fluctuates. Projections are purely illustrative based on benchmark circulars; AurumSave makes no guarantees regarding future gold prices or appreciation.
+            </p>
           </div>
         </div>
 
@@ -196,18 +210,18 @@ export default function GoldCalculator() {
           <div className="space-y-6">
             <div>
               <span className="text-[11px] uppercase font-mono tracking-wider text-aurum-text-dim font-bold block">
-                Estimated Physical Vault Allocation
+                Estimated Bullion Allocation
               </span>
               <div className="mt-2 flex items-baseline space-x-2">
                 <span className="font-serif-luxury text-4xl sm:text-5xl font-black text-aurum-text">
                   {calculatedGrams.toLocaleString()}
                 </span>
                 <span className="text-xl font-bold font-mono text-aurum-gold">
-                  Grams (24K)
+                  Grams ({purity})
                 </span>
               </div>
               <p className="text-xs font-mono text-aurum-text-dim mt-1">
-                Equivalent to <strong>{calculatedBhori} Bhori</strong> / Tola
+                Equivalent to <strong>{calculatedBhori} Bhori</strong> (1 Bhori = 11.664g)
               </p>
             </div>
 
@@ -218,12 +232,12 @@ export default function GoldCalculator() {
                 <span className="font-mono text-aurum-text">{formatBDT(totalCostBdt)}</span>
               </div>
               <div className="flex justify-between text-aurum-text-muted">
-                <span>Custody & Assay Fee (0.5%):</span>
+                <span>Custody & Assurance Fee (0.5%):</span>
                 <span className="font-mono text-aurum-text">{formatBDT(estimatedPlatformFee)}</span>
               </div>
               <div className="flex justify-between text-aurum-text-muted">
-                <span>Physical Vault Insurance:</span>
-                <span className="font-mono text-emerald-400 font-semibold">FREE (Bank Insured)</span>
+                <span>Segregated Vault Custody:</span>
+                <span className="font-mono text-emerald-400 font-semibold">Included</span>
               </div>
               <div className="flex justify-between font-bold text-sm pt-2 border-t border-aurum-border text-aurum-text">
                 <span>Total Estimated Payable:</span>
@@ -237,7 +251,7 @@ export default function GoldCalculator() {
               href={`/trade?purity=${purity}&amount=${totalCostBdt}&type=BUY`}
               className="w-full py-4 rounded-xl bg-gradient-to-r from-aurum-gold via-aurum-gold-light to-aurum-gold hover:brightness-110 text-aurum-midnight font-bold text-sm shadow-gold-glow border border-aurum-gold/40 transition-all flex items-center justify-center space-x-2 active:scale-[0.98]"
             >
-              <span>Lock This Rate (5-Min Guaranteed)</span>
+              <span>Explore Trade Desk</span>
               <ArrowRight className="w-4 h-4" />
             </a>
             <div className="flex items-center justify-center space-x-2 text-[11px] text-aurum-text-dim">
