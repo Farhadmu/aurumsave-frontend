@@ -43,7 +43,27 @@ export default function OperationsPage() {
         apiRequest<{ success: boolean; data: any[] }>('/orders/all?limit=25'),
       ]);
       if (recRes.success) setReport(recRes.data);
-      if (ordRes.success) setOrders(ordRes.data);
+      if (ordRes.success && ordRes.data) {
+        const rawOrders = Array.isArray(ordRes.data)
+          ? ordRes.data
+          : (ordRes.data as any).orders || [];
+        const normalized = rawOrders.map((o: any) => ({
+          ...o,
+          weightGrams:
+            typeof o.weightGrams === 'number'
+              ? o.weightGrams
+              : typeof o.weightMilligrams === 'number'
+              ? o.weightMilligrams / 1000
+              : 0,
+          totalBdt:
+            typeof o.totalBdt === 'number'
+              ? o.totalBdt
+              : typeof o.totalPoisha === 'number'
+              ? o.totalPoisha / 100
+              : 0,
+        }));
+        setOrders(normalized);
+      }
     } catch (err: any) {
       console.error('Failed to load operations data:', err);
       setError('Unable to load Treasury & Reconciliation Ledger.');

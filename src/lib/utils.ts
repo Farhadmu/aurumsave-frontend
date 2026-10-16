@@ -8,7 +8,10 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Format integer Poisha or BDT into Bangladeshi Taka currency display (৳)
  */
-export function formatBDT(amount: number, fromPoisha = false): string {
+export function formatBDT(amount?: number | null, fromPoisha = false): string {
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    return '৳0';
+  }
   const value = fromPoisha ? amount / 100 : amount;
   return new Intl.NumberFormat('en-BD', {
     style: 'currency',
@@ -23,14 +26,15 @@ export function formatBDT(amount: number, fromPoisha = false): string {
 /**
  * Format gold weight in milligrams or grams to clean readable text
  */
-export function formatGoldWeight(grams: number, includeBhori = false): string {
-  const formattedGrams = `${grams.toLocaleString('en-BD', {
+export function formatGoldWeight(grams?: number | null, includeBhori = false): string {
+  const safeGrams = typeof grams === 'number' && !isNaN(grams) ? grams : 0;
+  const formattedGrams = `${safeGrams.toLocaleString('en-BD', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 4,
   })} g`;
 
-  if (includeBhori && grams >= 1) {
-    const bhori = (grams / 11.664).toFixed(3);
+  if (includeBhori && safeGrams >= 1) {
+    const bhori = (safeGrams / 11.664).toFixed(3);
     return `${formattedGrams} (${bhori} Bhori)`;
   }
   return formattedGrams;

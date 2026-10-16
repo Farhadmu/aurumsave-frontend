@@ -137,7 +137,25 @@ export default function DashboardPage() {
       }
 
       if (ordersRes.success && ordersRes.data) {
-        setOrders(ordersRes.data);
+        const rawOrders = Array.isArray(ordersRes.data)
+          ? ordersRes.data
+          : (ordersRes.data as any).orders || [];
+        const normalized = rawOrders.map((o: any) => ({
+          ...o,
+          weightGrams:
+            typeof o.weightGrams === 'number'
+              ? o.weightGrams
+              : typeof o.weightMilligrams === 'number'
+              ? o.weightMilligrams / 1000
+              : 0,
+          totalBdt:
+            typeof o.totalBdt === 'number'
+              ? o.totalBdt
+              : typeof o.totalPoisha === 'number'
+              ? o.totalPoisha / 100
+              : 0,
+        }));
+        setOrders(normalized);
       }
     } catch (err: any) {
       console.error('Failed to load dashboard data:', err);
