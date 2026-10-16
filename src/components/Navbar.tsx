@@ -1,10 +1,24 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/navigation';
 import { useAuth } from '../lib/auth-context';
-import { Role } from '@aurumsave/shared';
-import { Shield, Sparkles, User, LogOut, LayoutDashboard, ChevronDown, Menu, X } from 'lucide-react';
+import { Role } from '../shared';
+import ThemeToggle from './ui/ThemeToggle';
+import { Badge } from './ui/Badge';
+import {
+  Shield,
+  Sparkles,
+  User,
+  LogOut,
+  LayoutDashboard,
+  ChevronDown,
+  Menu,
+  X,
+  TrendingUp,
+  Coins,
+  Headphones,
+  Lock,
+} from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -30,162 +44,236 @@ export default function Navbar() {
     }
   };
 
+  const getRoleDisplayName = () => {
+    if (!user) return '';
+    switch (user.role) {
+      case Role.SUPER_ADMIN:
+        return 'Super Admin';
+      case Role.ADMIN:
+        return 'Administrator';
+      case Role.KYC_OFFICER:
+        return 'Compliance Officer';
+      case Role.FINANCE_OFFICER:
+        return 'Operations Desk';
+      case Role.SUPPORT_AGENT:
+        return 'Concierge Support';
+      case Role.AUDITOR:
+        return 'Audit Authority';
+      default:
+        return 'Private Client';
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-50 bg-aurum-navy/90 backdrop-blur-md border-b border-aurum-border">
+    <header className="sticky top-0 z-50 bg-aurum-midnight/90 backdrop-blur-xl border-b border-aurum-border transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Brand Logo */}
-          <a href="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-aurum-gold to-aurum-gold-dark flex items-center justify-center shadow-gold-glow group-hover:scale-105 transition-transform">
-              <span className="font-serif font-black text-aurum-navy text-xl tracking-wider">Au</span>
+          {/* Brand Mark */}
+          <a href="/" className="flex items-center space-x-3.5 group">
+            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-aurum-gold via-aurum-gold-light to-aurum-gold-dark flex items-center justify-center shadow-gold-glow group-hover:scale-105 transition-transform duration-300">
+              <span className="font-serif-luxury font-black text-aurum-midnight text-xl tracking-wider select-none">
+                Au
+              </span>
+              <div className="absolute -inset-0.5 rounded-2xl bg-aurum-gold/20 blur-sm -z-10 group-hover:bg-aurum-gold/40 transition-colors" />
             </div>
-            <div>
-              <span className="font-serif text-2xl font-bold tracking-tight text-aurum-ivory group-hover:text-aurum-gold transition-colors">
+            <div className="flex flex-col">
+              <span className="font-serif-luxury text-2xl font-bold tracking-tight text-aurum-text group-hover:text-aurum-gold transition-colors duration-200">
                 Aurum<span className="text-aurum-gold font-sans font-light">Save</span>
               </span>
-              <span className="hidden sm:inline-block ml-2 px-1.5 py-0.5 text-[10px] uppercase font-semibold tracking-widest bg-aurum-surface border border-aurum-border text-aurum-muted rounded">
-                Bangladesh
-              </span>
+              <div className="flex items-center space-x-1.5 -mt-0.5">
+                <span className="text-[9px] uppercase font-bold tracking-widest text-aurum-text-dim">
+                  Sovereign Bullion Vault
+                </span>
+                <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                <span className="text-[9px] font-mono text-emerald-400 font-semibold">BD</span>
+              </div>
             </div>
           </a>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-aurum-muted">
+          <nav className="hidden lg:flex items-center space-x-7 text-sm font-medium text-aurum-text-muted">
             <a href="/#rates" className="hover:text-aurum-gold transition-colors">
-              Live Rates
-            </a>
-            <a href="/#how-it-works" className="hover:text-aurum-gold transition-colors">
-              How It Works
+              BAJUS Rates
             </a>
             <a href="/#calculator" className="hover:text-aurum-gold transition-colors">
               Calculator
             </a>
+            <a href="/trade" className="hover:text-aurum-gold transition-colors flex items-center space-x-1.5">
+              <span>Trade Gold</span>
+              <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-aurum-gold/20 text-aurum-gold font-mono">
+                5m Lock
+              </span>
+            </a>
             <a href="/#vault" className="hover:text-aurum-gold transition-colors">
-              Vault & Security
+              Vault Proof
+            </a>
+            <a href="/support" className="hover:text-aurum-gold transition-colors">
+              Support
             </a>
             <a href="/#faq" className="hover:text-aurum-gold transition-colors">
               FAQ
             </a>
           </nav>
 
-          {/* Right Action / Auth */}
-          <div className="hidden md:flex items-center space-x-4">
-            <div className="flex items-center space-x-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>BAJUS Verified</span>
-            </div>
+          {/* Right Action / Auth & Controls */}
+          <div className="hidden md:flex items-center space-x-3.5">
+            <Badge variant="emerald" pulse size="sm" className="hidden xl:inline-flex">
+              BAJUS Live Feed
+            </Badge>
+
+            {/* Dark / Light Theme Toggle */}
+            <ThemeToggle />
 
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center space-x-2.5 px-3 py-2 rounded-lg bg-aurum-surface border border-aurum-border hover:border-aurum-gold/40 text-aurum-ivory text-sm transition-all"
+                  className="flex items-center space-x-2.5 px-3.5 py-2 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-aurum-text text-sm transition-all duration-200"
                 >
-                  <div className="w-7 h-7 rounded-full bg-aurum-card border border-aurum-gold/30 flex items-center justify-center text-aurum-gold text-xs font-bold">
-                    {user.fullName.substring(0, 1)}
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-aurum-gold to-aurum-gold-dark text-aurum-midnight font-bold text-xs flex items-center justify-center shadow-sm">
+                    {user.fullName.charAt(0)}
                   </div>
-                  <span className="max-w-[120px] truncate font-medium">{user.fullName}</span>
-                  <ChevronDown className="w-4 h-4 text-aurum-muted" />
+                  <span className="max-w-[130px] truncate font-semibold text-xs">
+                    {user.fullName}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-aurum-text-muted" />
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-xl bg-aurum-card border border-aurum-border shadow-2xl py-2 z-50">
-                    <div className="px-4 py-2 border-b border-aurum-border">
-                      <p className="text-xs text-aurum-muted uppercase tracking-wider font-semibold">Logged In As</p>
-                      <p className="text-sm font-semibold text-aurum-ivory truncate">{user.fullName}</p>
-                      <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded bg-aurum-gold/20 text-aurum-gold">
-                        {user.role}
-                      </span>
+                  <div className="absolute right-0 mt-2.5 w-64 rounded-2xl bg-aurum-card border border-aurum-border-gold shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-3 border-b border-aurum-border/60">
+                      <p className="text-[10px] uppercase font-mono tracking-widest text-aurum-text-dim font-bold">
+                        Authenticated Client
+                      </p>
+                      <p className="text-sm font-bold text-aurum-text truncate mt-0.5">
+                        {user.fullName}
+                      </p>
+                      <p className="text-xs text-aurum-text-muted truncate">{user.email}</p>
+                      <div className="mt-2">
+                        <Badge variant="gold" size="sm">
+                          {getRoleDisplayName()}
+                        </Badge>
+                      </div>
                     </div>
 
-                    <a
-                      href={getDashboardLink()}
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center space-x-2 px-4 py-2.5 text-sm text-aurum-ivory hover:bg-aurum-surface hover:text-aurum-gold transition-colors"
-                    >
-                      <LayoutDashboard className="w-4 h-4" />
-                      <span>{user.role === Role.CUSTOMER ? 'Customer Dashboard' : 'Staff Workspace'}</span>
-                    </a>
+                    <div className="py-1">
+                      <a
+                        href={getDashboardLink()}
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center space-x-2.5 px-4 py-2.5 text-xs font-semibold text-aurum-text hover:bg-aurum-surface hover:text-aurum-gold transition-colors"
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-aurum-gold" />
+                        <span>
+                          {user.role === Role.CUSTOMER ? 'Customer Vault Dashboard' : 'Staff Workspace'}
+                        </span>
+                      </a>
 
-                    <button
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        logout();
-                      }}
-                      className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sign Out</span>
-                    </button>
+                      <a
+                        href="/trade"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center space-x-2.5 px-4 py-2.5 text-xs font-semibold text-aurum-text hover:bg-aurum-surface hover:text-aurum-gold transition-colors"
+                      >
+                        <Coins className="w-4 h-4 text-aurum-gold" />
+                        <span>Buy / Liquidate Bullion</span>
+                      </a>
+
+                      <a
+                        href="/support"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center space-x-2.5 px-4 py-2.5 text-xs font-semibold text-aurum-text hover:bg-aurum-surface hover:text-aurum-gold transition-colors"
+                      >
+                        <Headphones className="w-4 h-4 text-aurum-gold" />
+                        <span>Concierge Support Desk</span>
+                      </a>
+                    </div>
+
+                    <div className="pt-1 border-t border-aurum-border/60">
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          logout();
+                        }}
+                        className="w-full flex items-center space-x-2.5 px-4 py-2.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Secure Disconnect</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2.5">
                 <a
                   href="/login"
-                  className="px-4 py-2 text-sm font-medium text-aurum-ivory hover:text-aurum-gold transition-colors"
+                  className="px-4 py-2 text-xs font-bold text-aurum-text hover:text-aurum-gold transition-colors"
                 >
                   Sign In
                 </a>
                 <a
                   href="/register"
-                  className="px-5 py-2 text-sm font-semibold text-aurum-navy bg-gradient-to-r from-aurum-gold to-aurum-gold-light hover:brightness-110 rounded-lg shadow-gold-glow transition-all"
+                  className="px-5 py-2.5 text-xs font-bold text-aurum-midnight bg-gradient-to-r from-aurum-gold via-aurum-gold-light to-aurum-gold hover:brightness-110 rounded-xl shadow-gold-glow border border-aurum-gold/40 transition-all active:scale-[0.98]"
                 >
-                  Start Saving
+                  Open Vault Account
                 </a>
               </div>
             )}
           </div>
 
-          {/* Mobile menu toggle */}
-          <div className="flex items-center md:hidden">
+          {/* Mobile Right Controls */}
+          <div className="flex items-center space-x-2 md:hidden">
+            <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-aurum-surface text-aurum-muted hover:text-aurum-ivory"
+              aria-label="Toggle navigation menu"
+              className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-aurum-border bg-aurum-navy px-4 pt-3 pb-6 space-y-4">
-          <nav className="flex flex-col space-y-3 text-base text-aurum-muted font-medium">
-            <a href="/#rates" onClick={() => setMobileMenuOpen(false)}>
-              Live Rates
+        <div className="md:hidden border-b border-aurum-border bg-aurum-card px-5 pt-4 pb-6 space-y-4 animate-in slide-in-from-top-3 duration-200">
+          <nav className="flex flex-col space-y-3 text-sm text-aurum-text font-medium">
+            <a href="/#rates" onClick={() => setMobileMenuOpen(false)} className="hover:text-aurum-gold">
+              BAJUS Benchmark Rates
             </a>
-            <a href="/#how-it-works" onClick={() => setMobileMenuOpen(false)}>
-              How It Works
+            <a href="/#calculator" onClick={() => setMobileMenuOpen(false)} className="hover:text-aurum-gold">
+              Savings Calculator
             </a>
-            <a href="/#calculator" onClick={() => setMobileMenuOpen(false)}>
-              Calculator
+            <a href="/trade" onClick={() => setMobileMenuOpen(false)} className="hover:text-aurum-gold">
+              Trade Gold (5m Rate Lock)
             </a>
-            <a href="/#vault" onClick={() => setMobileMenuOpen(false)}>
-              Vault & Security
+            <a href="/#vault" onClick={() => setMobileMenuOpen(false)} className="hover:text-aurum-gold">
+              Vault Custody & Insurance
             </a>
-            <a href="/#faq" onClick={() => setMobileMenuOpen(false)}>
-              FAQ
+            <a href="/support" onClick={() => setMobileMenuOpen(false)} className="hover:text-aurum-gold">
+              Support Desk
+            </a>
+            <a href="/#faq" onClick={() => setMobileMenuOpen(false)} className="hover:text-aurum-gold">
+              Frequently Asked Questions
             </a>
           </nav>
-          <div className="pt-4 border-t border-aurum-border flex flex-col space-y-2">
+
+          <div className="pt-4 border-t border-aurum-border flex flex-col space-y-2.5">
             {user ? (
               <>
                 <a
                   href={getDashboardLink()}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center py-2.5 rounded-lg bg-aurum-gold text-aurum-navy font-bold"
+                  className="w-full text-center py-3 rounded-xl bg-aurum-gold text-aurum-midnight font-bold text-sm shadow-gold-glow"
                 >
-                  Dashboard ({user.role})
+                  Open {getRoleDisplayName()} Workspace
                 </a>
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
                     logout();
                   }}
-                  className="w-full text-center py-2 text-sm text-rose-400"
+                  className="w-full text-center py-2 text-xs font-semibold text-rose-400"
                 >
                   Sign Out
                 </button>
@@ -195,16 +283,16 @@ export default function Navbar() {
                 <a
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center py-2.5 rounded-lg bg-aurum-surface text-aurum-ivory font-medium border border-aurum-border"
+                  className="w-full text-center py-3 rounded-xl bg-aurum-surface text-aurum-text font-semibold text-sm border border-aurum-border"
                 >
-                  Sign In
+                  Sign In to Vault
                 </a>
                 <a
                   href="/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center py-2.5 rounded-lg bg-aurum-gold text-aurum-navy font-bold shadow-gold-glow"
+                  className="w-full text-center py-3 rounded-xl bg-gradient-to-r from-aurum-gold to-aurum-gold-light text-aurum-midnight font-bold text-sm shadow-gold-glow"
                 >
-                  Start Saving
+                  Open Free Vault Account
                 </a>
               </>
             )}

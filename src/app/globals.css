@@ -1,25 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #0b1020;
-  --foreground: #f6f2e9;
-  --surface: #121a2b;
-  --card: #182238;
-  --border: #233252;
-  --gold: #d9b66d;
-  --gold-light: #f3e4c3;
-  --gold-dark: #a88439;
-  --muted: #9ca7ba;
+/* =========================================================================
+   Luxury Fintech Design Tokens & Theming
+   ========================================================================= */
+
+:root,
+html.dark {
+  /* Midnight Navy Dark Base */
+  --aurum-midnight: #060913;
+  --aurum-surface: #0b1120;
+  --aurum-card: #111a2f;
+  --aurum-card-hover: #16223d;
+  --aurum-border: rgba(212, 175, 55, 0.14);
+  --aurum-border-gold: rgba(212, 175, 55, 0.35);
+
+  /* Champagne & 24K Gold Palette */
+  --aurum-gold: #d4af37;
+  --aurum-gold-light: #f5e6b3;
+  --aurum-gold-dark: #996515;
+  --aurum-champagne: #faebd7;
+
+  /* Typography */
+  --aurum-text: #f8f9fa;
+  --aurum-text-muted: #94a3b8;
+  --aurum-text-dim: #64748b;
+
+  /* Ambient Canvas */
+  --bg-glow-primary: rgba(212, 175, 55, 0.08);
+  --bg-glow-secondary: rgba(16, 185, 129, 0.05);
+}
+
+html.light {
+  /* Solar Ivory & Warm Alabaster Light Base */
+  --aurum-midnight: #f9f7f2;
+  --aurum-surface: #ffffff;
+  --aurum-card: #f3efe6;
+  --aurum-card-hover: #eae3d5;
+  --aurum-border: rgba(184, 134, 11, 0.2);
+  --aurum-border-gold: rgba(184, 134, 11, 0.45);
+
+  /* Burnished Gold for High-Contrast Readability */
+  --aurum-gold: #b8860b;
+  --aurum-gold-light: #d4af37;
+  --aurum-gold-dark: #7a5805;
+  --aurum-champagne: #fff8dc;
+
+  /* Typography */
+  --aurum-text: #0d1424;
+  --aurum-text-muted: #475569;
+  --aurum-text-dim: #64748b;
+
+  /* Ambient Canvas */
+  --bg-glow-primary: rgba(212, 175, 55, 0.12);
+  --bg-glow-secondary: rgba(16, 185, 129, 0.08);
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--aurum-midnight);
+  color: var(--aurum-text);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* =========================================================================
+   Luxury Visual Treatments & Utilities
+   ========================================================================= */
+
+.font-serif-luxury {
+  font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, var(--aurum-gold-light) 30%, var(--aurum-gold) 70%, var(--aurum-gold-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.light .gold-gradient-text {
+  background: linear-gradient(135deg, #111a2f 0%, #b8860b 50%, #7a5805 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-badge-shimmer {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.25) 50%, rgba(212, 175, 55, 0.1) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 5s infinite;
+}
+
+.luxury-glass {
+  background: var(--aurum-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--aurum-border);
+}
+
+.luxury-glass:hover {
+  border-color: var(--aurum-border-gold);
+}
+
+.luxury-card-glow {
+  position: relative;
+}
+
+.luxury-card-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--aurum-border-gold), transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 /* Custom Scrollbar */
@@ -29,42 +130,32 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b1020;
+  background: var(--aurum-midnight);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #233252;
+  background: var(--aurum-border);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #d9b66d;
+  background: var(--aurum-gold);
 }
 
-/* Shimmer & Glow Effects */
-.gold-gradient-text {
-  background: linear-gradient(135deg, #f6f2e9 0%, #d9b66d 50%, #f3e4c3 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.gold-gradient-border {
-  border-image: linear-gradient(135deg, rgba(217, 182, 109, 0.4), rgba(217, 182, 109, 0.05)) 1;
-}
-
-.glass-panel {
-  background: rgba(18, 26, 43, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(217, 182, 109, 0.15);
-}
-
-.glass-panel:hover {
-  border-color: rgba(217, 182, 109, 0.3);
-}
-
-/* Accessible focus outline */
+/* Focus Accessibility */
 *:focus-visible {
-  outline: 2px solid #d9b66d;
+  outline: 2px solid var(--aurum-gold);
   outline-offset: 2px;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

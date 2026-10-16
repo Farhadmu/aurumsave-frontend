@@ -4,7 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth-context';
 import { apiRequest } from '../../../lib/api';
-import { Role } from '@aurumsave/shared';
+import { Role } from '../../../shared';
+import { formatBDT, formatGoldWeight, formatDateTime } from '../../../lib/utils';
+import StaffHeader from '../../../components/StaffHeader';
+import { Badge } from '../../../components/ui/Badge';
+import { Button } from '../../../components/ui/Button';
+import { Card } from '../../../components/ui/Card';
+import { Skeleton } from '../../../components/ui/Skeleton';
+import { EmptyState, ErrorState } from '../../../components/ui/States';
 import {
   Users,
   Coins,
@@ -14,6 +21,10 @@ import {
   Search,
   CheckCircle2,
   XCircle,
+  Building,
+  Scale,
+  RefreshCw,
+  Lock,
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -23,28 +34,38 @@ export default function AdminPage() {
   const [overview, setOverview] = useState<any>(null);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [roleFilter, setRoleFilter] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const [ovRes, usrRes] = await Promise.all([
+        apiRequest<{ success: boolean; data: any }>('/admin/overview'),
+        apiRequest<{ success: boolean; data: any[] }>(
+          `/admin/users${roleFilter ? `?role=${roleFilter}` : ''}`,
+        ),
+      ]);
+
+      if (ovRes.success) setOverview(ovRes.data);
+      if (usrRes.success) setUsersList(usrRes.data);
+    } catch (err: any) {
+      console.error('Failed to load admin data:', err);
+      setError('Unable to load executive administration statistics.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!authLoading && (!user || (user.role !== Role.SUPER_ADMIN && user.role !== Role.ADMIN))) {
+    if (
+      !authLoading &&
+      (!user || (user.role !== Role.SUPER_ADMIN && user.role !== Role.ADMIN))
+    ) {
       router.push('/login');
       return;
-    }
-
-    async function loadData() {
-      try {
-        const [ovRes, usrRes] = await Promise.all([
-          apiRequest<{ success: boolean; data: any }>('/admin/overview'),
-          apiRequest<{ success: boolean; data: any[] }>(`/admin/users${roleFilter ? `?role=${roleFilter}` : ''}`),
-        ]);
-
-        if (ovRes.success) setOverview(ovRes.data);
-        if (usrRes.success) setUsersList(usrRes.data);
-      } catch (err) {
-        console.error('Failed to load admin data:', err);
-      } finally {
-        setIsLoading(false);
-      }
     }
 
     if (user) loadData();
@@ -57,7 +78,9 @@ export default function AdminPage() {
         body: JSON.stringify({ isActive: !currentStatus }),
       });
       setUsersList((prev) =>
-        prev.map((u) => (u._id === targetUserId ? { ...u, isActive: !currentStatus } : u)),
+        prev.map((u) =>
+          u._id === targetUserId ? { ...u, isActive: !currentStatus } : u,
+        ),
       );
     } catch (err: any) {
       alert(err.message || 'Action failed');
@@ -66,161 +89,229 @@ export default function AdminPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="max-w-md mx-auto px-4 py-20 text-center space-y-3">
-        <div className="w-8 h-8 rounded-full border-2 border-aurum-gold border-t-transparent animate-spin mx-auto" />
-        <p className="text-xs text-aurum-muted">Loading Administrative Workspace...</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Skeleton className="h-32 rounded-2xl" />
+          <Skeleton className="h-32 rounded-2xl" />
+          <Skeleton className="h-32 rounded-2xl" />
+          <Skeleton className="h-32 rounded-2xl" />
+        </div>
       </div>
     );
   }
 
+  const filteredUsers = usersList.filter((u) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      u.fullName?.toLowerCase().includes(query) ||
+      u.email?.toLowerCase().includes(query) ||
+      u.role?.toLowerCase().includes(query)
+    );
+  });
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-aurum-border">
-        <div>
-          <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded bg-aurum-gold/20 text-aurum-gold text-xs font-bold uppercase tracking-wider mb-1">
-            <span>{user?.role} Workspace</span>
-          </div>
-          <h1 className="font-serif text-3xl font-bold text-aurum-ivory">
-            Platform Operational Command
-          </h1>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
+      <StaffHeader
+        title="Executive Command Center"
+        subtitle="Platform governance, vault reserve liquidity ratios, and cross-staff privilege allocation."
+      />
 
-        <div className="flex items-center space-x-3 text-xs">
-          <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Audit Trail Immutable</span>
+      {error && <ErrorState message={error} onRetry={loadData} />}
+
+      {/* Overview Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <Card glow hoverLift>
+          <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim font-bold block mb-1">
+            Total Vault Custody (Grams)
           </span>
-        </div>
+          <div className="text-3xl font-bold font-mono text-aurum-gold">
+            {formatGoldWeight(overview?.totalVaultHoldingsGrams || 0)}
+          </div>
+          <span className="text-xs text-aurum-text-muted mt-2 block font-mono">
+            {((overview?.totalVaultHoldingsGrams || 0) / 1000).toFixed(3)} Kilograms Allocated
+          </span>
+        </Card>
+
+        <Card hoverLift>
+          <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim font-bold block mb-1">
+            Total Vault Assets Under Custody
+          </span>
+          <div className="text-3xl font-bold font-mono text-aurum-text">
+            {formatBDT(overview?.totalValuationBdt || 0)}
+          </div>
+          <span className="text-xs text-emerald-400 mt-2 block font-mono font-bold">
+            100% Fully Backed Reserves
+          </span>
+        </Card>
+
+        <Card hoverLift>
+          <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim font-bold block mb-1">
+            Total Client Accounts
+          </span>
+          <div className="text-3xl font-bold font-mono text-aurum-text">
+            {overview?.totalUsers || usersList.length}
+          </div>
+          <span className="text-xs text-aurum-text-muted mt-2 block">
+            {overview?.usersPendingKyc || 0} Pending BFIU Review
+          </span>
+        </Card>
+
+        <Card hoverLift>
+          <span className="text-[10px] uppercase font-mono tracking-wider text-aurum-text-dim font-bold block mb-1">
+            Total Platform Orders
+          </span>
+          <div className="text-3xl font-bold font-mono text-aurum-text">
+            {overview?.totalOrders || 0}
+          </div>
+          <span className="text-xs text-emerald-400 mt-2 block font-mono">
+            Double-Entry Verified
+          </span>
+        </Card>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-aurum-card border border-aurum-border space-y-2">
-          <div className="flex items-center justify-between text-xs text-aurum-slate">
-            <span>Total Accounts</span>
-            <Users className="w-4 h-4 text-aurum-gold" />
-          </div>
-          <div className="text-2xl font-mono font-bold text-aurum-ivory">
-            {overview?.totalCustomers || 0}
-          </div>
-          <span className="text-[11px] text-aurum-muted">Registered savers &amp; staff</span>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-aurum-card border border-aurum-border space-y-2">
-          <div className="flex items-center justify-between text-xs text-aurum-slate">
-            <span>Vault Gold Backing</span>
-            <Coins className="w-4 h-4 text-aurum-gold" />
-          </div>
-          <div className="text-2xl font-mono font-bold text-aurum-gold">
-            {overview?.totalVaultGoldGrams || 0}g
-          </div>
-          <span className="text-[11px] text-aurum-muted">Allocated physical bullion</span>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-aurum-card border border-aurum-border space-y-2">
-          <div className="flex items-center justify-between text-xs text-aurum-slate">
-            <span>Transacted Volume</span>
-            <TrendingUp className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-mono font-bold text-aurum-ivory">
-            ৳{(overview?.totalVolumeBdt || 0).toLocaleString()}
-          </div>
-          <span className="text-[11px] text-aurum-muted">{overview?.totalOrdersCount || 0} total orders</span>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-aurum-card border border-aurum-border space-y-2">
-          <div className="flex items-center justify-between text-xs text-aurum-slate">
-            <span>Open Support Tickets</span>
-            <ShieldAlert className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-2xl font-mono font-bold text-aurum-ivory">
-            {overview?.openTicketsCount || 0}
-          </div>
-          <span className="text-[11px] text-aurum-muted">Pending staff attention</span>
-        </div>
-      </div>
-
-      {/* User Management Section */}
-      <div className="rounded-3xl bg-aurum-card border border-aurum-border overflow-hidden">
-        <div className="p-6 border-b border-aurum-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Staff & User Management Table */}
+      <div className="rounded-3xl bg-aurum-card border border-aurum-border p-6 sm:p-8 shadow-card-luxury space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-aurum-border">
           <div>
-            <h3 className="font-serif text-xl font-bold text-aurum-ivory">Platform User Management</h3>
-            <p className="text-xs text-aurum-muted mt-0.5">Manage access, status, and role privileges</p>
+            <h3 className="font-serif-luxury text-xl font-bold text-aurum-text">
+              User & Privilege Management
+            </h3>
+            <p className="text-xs text-aurum-text-muted">
+              Inspect credentials, verify role assignments, or toggle client security status
+            </p>
           </div>
 
-          <div className="flex items-center space-x-3 text-xs">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-aurum-text-dim" />
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 pr-3 py-1.5 rounded-xl bg-aurum-surface border border-aurum-border text-xs text-aurum-text placeholder-aurum-text-dim focus:outline-none focus:border-aurum-gold/60 w-44 sm:w-56"
+              />
+            </div>
+
+            {/* Role Filter */}
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-ivory focus:border-aurum-gold focus:outline-none"
+              className="px-3 py-1.5 rounded-xl bg-aurum-surface border border-aurum-border text-xs text-aurum-text font-semibold focus:outline-none focus:border-aurum-gold/60"
             >
               <option value="">All Roles</option>
-              <option value={Role.CUSTOMER}>Customers Only</option>
-              <option value={Role.KYC_OFFICER}>KYC Officers</option>
-              <option value={Role.FINANCE_OFFICER}>Finance Officers</option>
-              <option value={Role.SUPPORT_AGENT}>Support Agents</option>
-              <option value={Role.AUDITOR}>Auditors</option>
-              <option value={Role.ADMIN}>Admins</option>
+              <option value="CUSTOMER">Customer</option>
+              <option value="SUPER_ADMIN">Super Admin</option>
+              <option value="KYC_OFFICER">KYC Officer</option>
+              <option value="FINANCE_OFFICER">Finance Officer</option>
+              <option value="SUPPORT_AGENT">Support Agent</option>
+              <option value="AUDITOR">Auditor</option>
             </select>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-aurum-muted">
-            <thead className="bg-aurum-surface text-[11px] uppercase tracking-wider text-aurum-slate">
-              <tr>
-                <th className="p-4">Name</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Role</th>
-                <th className="p-4">KYC Tier</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-aurum-border/50">
-              {usersList.map((u) => (
-                <tr key={u._id} className="hover:bg-aurum-surface/40 transition-colors">
-                  <td className="p-4 font-semibold text-aurum-ivory">{u.fullName}</td>
-                  <td className="p-4 font-mono">{u.email}</td>
-                  <td className="p-4">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-aurum-surface border border-aurum-border text-aurum-gold">
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-aurum-navy text-aurum-muted">
-                      {u.kycStatus}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        u.isActive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'
-                      }`}
-                    >
-                      {u.isActive ? 'Active' : 'Suspended'}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    {u.role !== Role.SUPER_ADMIN && (
-                      <button
-                        onClick={() => handleToggleUserStatus(u._id, u.isActive)}
-                        className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                          u.isActive
-                            ? 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'
-                            : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+        {filteredUsers.length === 0 ? (
+          <EmptyState
+            icon={<Users className="w-7 h-7" />}
+            title="No Users Found"
+            description="No users matched your role filter or search criteria."
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-aurum-border text-aurum-text-dim uppercase font-mono tracking-wider">
+                  <th className="py-3 px-4 font-bold">User</th>
+                  <th className="py-3 px-4 font-bold">Email Address</th>
+                  <th className="py-3 px-4 font-bold">Role</th>
+                  <th className="py-3 px-4 font-bold">KYC Status</th>
+                  <th className="py-3 px-4 font-bold">Account State</th>
+                  <th className="py-3 px-4 font-bold">Registered</th>
+                  <th className="py-3 px-4 font-bold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-aurum-border/60">
+                {filteredUsers.map((u) => (
+                  <tr key={u._id} className="hover:bg-aurum-surface/50 transition-colors">
+                    <td className="py-3.5 px-4 font-semibold text-aurum-text">
+                      {u.fullName}
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-aurum-text-muted">
+                      {u.email}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <Badge
+                        variant={
+                          u.role === Role.SUPER_ADMIN
+                            ? 'gold'
+                            : u.role === Role.CUSTOMER
+                            ? 'slate'
+                            : 'sapphire'
+                        }
+                        size="sm"
+                      >
+                        {u.role}
+                      </Badge>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <Badge
+                        variant={
+                          u.kycStatus === 'APPROVED'
+                            ? 'emerald'
+                            : u.kycStatus === 'PENDING_REVIEW'
+                            ? 'amber'
+                            : 'slate'
+                        }
+                        size="sm"
+                      >
+                        {u.kycStatus}
+                      </Badge>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`inline-flex items-center space-x-1 font-semibold ${
+                          u.isActive !== false ? 'text-emerald-400' : 'text-rose-400'
                         }`}
                       >
-                        {u.isActive ? 'Suspend' : 'Activate'}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                        {u.isActive !== false ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Active</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>Suspended</span>
+                          </>
+                        )}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-aurum-text-dim">
+                      {formatDateTime(u.createdAt)}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      {u.role !== Role.SUPER_ADMIN && (
+                        <button
+                          onClick={() => handleToggleUserStatus(u._id, u.isActive !== false)}
+                          className={`px-3 py-1 rounded-lg border text-xs font-semibold transition-all ${
+                            u.isActive !== false
+                              ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10'
+                              : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+                          }`}
+                        >
+                          {u.isActive !== false ? 'Suspend' : 'Activate'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
