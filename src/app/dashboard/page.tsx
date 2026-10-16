@@ -44,8 +44,11 @@ import {
   Download,
   Search,
   CheckCircle2,
-  X,
   CreditCard,
+  Target,
+  Shield,
+  Printer,
+  X,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -259,14 +262,32 @@ export default function DashboardPage() {
           </h1>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <a href="/goals">
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<Target className="w-4 h-4 text-aurum-gold" />}
+            >
+              Savings Goals
+            </Button>
+          </a>
+          <a href="/security">
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<Shield className="w-4 h-4 text-emerald-400" />}
+            >
+              Security Center
+            </Button>
+          </a>
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => setDeliveryModalOpen(true)}
-            leftIcon={<Truck className="w-4 h-4 text-aurum-gold" />}
+            onClick={() => window.print()}
+            leftIcon={<Download className="w-4 h-4 text-aurum-gold" />}
           >
-            Physical Delivery
+            Export Passport (PDF)
           </Button>
           <a href="/trade">
             <Button

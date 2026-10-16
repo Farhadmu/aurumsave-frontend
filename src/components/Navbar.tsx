@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../lib/auth-context';
+import { useLanguage } from '../lib/language-context';
 import { Role } from '../shared';
 import ThemeToggle from './ui/ThemeToggle';
 import { Badge } from './ui/Badge';
@@ -18,10 +19,13 @@ import {
   Coins,
   Headphones,
   Lock,
+  Target,
+  GraduationCap,
 } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { language, toggleLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -91,35 +95,46 @@ export default function Navbar() {
           </a>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-7 text-sm font-medium text-aurum-text-muted">
-            <a href="/#rates" className="hover:text-aurum-gold transition-colors">
-              BAJUS Rates
-            </a>
-            <a href="/#calculator" className="hover:text-aurum-gold transition-colors">
-              Calculator
-            </a>
-            <a href="/trade" className="hover:text-aurum-gold transition-colors flex items-center space-x-1.5">
-              <span>Trade Gold</span>
+          <nav className="hidden lg:flex items-center space-x-6 text-sm font-medium text-aurum-text-muted">
+            <a href="/trade" className="hover:text-aurum-gold transition-colors flex items-center space-x-1.5 font-semibold text-aurum-text">
+              <span>{t('nav.trade')}</span>
               <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-aurum-gold/20 text-aurum-gold font-mono">
-                5m Lock
+                LIVE
               </span>
             </a>
-            <a href="/#vault" className="hover:text-aurum-gold transition-colors">
-              Vault Proof
+            <a href="/goals" className="hover:text-aurum-gold transition-colors flex items-center space-x-1">
+              <Target className="w-3.5 h-3.5 text-aurum-gold" />
+              <span>{t('nav.goals')}</span>
+            </a>
+            <a href="/security" className="hover:text-aurum-gold transition-colors flex items-center space-x-1">
+              <Shield className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{t('nav.security')}</span>
+            </a>
+            <a href="/academy" className="hover:text-aurum-gold transition-colors flex items-center space-x-1">
+              <GraduationCap className="w-3.5 h-3.5 text-aurum-gold" />
+              <span>{t('nav.academy')}</span>
             </a>
             <a href="/support" className="hover:text-aurum-gold transition-colors">
-              Support
-            </a>
-            <a href="/#faq" className="hover:text-aurum-gold transition-colors">
-              FAQ
+              {t('nav.support')}
             </a>
           </nav>
 
           {/* Right Action / Auth & Controls */}
-          <div className="hidden md:flex items-center space-x-3.5">
+          <div className="hidden md:flex items-center space-x-3">
             <Badge variant="emerald" pulse size="sm" className="hidden xl:inline-flex">
-              BAJUS Live Feed
+              BAJUS 24K Live
             </Badge>
+
+            {/* Language Switcher Toggle */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-xs font-bold text-aurum-text transition-all duration-200"
+              title={language === 'bn' ? 'Switch to English' : 'বাংলায় দেখুন'}
+            >
+              <span className={language === 'bn' ? 'text-aurum-gold' : 'text-aurum-text-muted'}>বাংলা</span>
+              <span className="text-aurum-border">/</span>
+              <span className={language === 'en' ? 'text-aurum-gold' : 'text-aurum-text-muted'}>EN</span>
+            </button>
 
             {/* Dark / Light Theme Toggle */}
             <ThemeToggle />
@@ -221,12 +236,21 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Right Controls */}
-          <div className="flex items-center space-x-2 md:hidden">
+          <div className="flex items-center space-x-1.5 md:hidden">
+            <button
+              onClick={toggleLanguage}
+              className="px-2 py-1.5 rounded-lg bg-aurum-surface border border-aurum-border text-[11px] font-bold text-aurum-text"
+              aria-label="Toggle language"
+            >
+              <span className={language === 'bn' ? 'text-aurum-gold' : 'text-aurum-text-muted'}>BN</span>
+              <span className="text-aurum-border">/</span>
+              <span className={language === 'en' ? 'text-aurum-gold' : 'text-aurum-text-muted'}>EN</span>
+            </button>
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle navigation menu"
-              className="p-2.5 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text"
+              className="p-2 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>

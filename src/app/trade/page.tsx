@@ -204,6 +204,26 @@ function TradeContent() {
         </div>
       )}
 
+      {user?.isAccountFrozen && (
+        <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/60 flex items-center justify-between gap-3 text-rose-200 text-xs shadow-lg">
+          <div className="flex items-center space-x-2.5">
+            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+            <div>
+              <span className="font-bold block">Emergency Security Lockdown Active</span>
+              <span className="text-[11px] text-rose-300">
+                Gold orders and liquidation are halted while account is frozen.
+              </span>
+            </div>
+          </div>
+          <a
+            href="/security"
+            className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shrink-0 shadow transition-all"
+          >
+            Security Center
+          </a>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         {/* Left Input Configuration Card */}
         <div className="md:col-span-7 space-y-6">
