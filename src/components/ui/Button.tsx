@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'gold';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -31,6 +31,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary:
+        'bg-gradient-to-r from-aurum-gold via-aurum-gold-light to-aurum-gold text-aurum-midnight hover:brightness-110 active:scale-[0.98] shadow-gold-glow font-bold border border-aurum-gold/40',
+      gold:
         'bg-gradient-to-r from-aurum-gold via-aurum-gold-light to-aurum-gold text-aurum-midnight hover:brightness-110 active:scale-[0.98] shadow-gold-glow font-bold border border-aurum-gold/40',
       secondary:
         'bg-aurum-surface text-aurum-text border border-aurum-border hover:border-aurum-gold/50 hover:bg-aurum-card active:scale-[0.98]',
