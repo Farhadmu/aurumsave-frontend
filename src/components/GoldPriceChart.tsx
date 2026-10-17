@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -24,9 +24,9 @@ import {
   Sparkles,
   Info,
   Calendar,
+  CalendarX,
   Scale,
   Bot,
-  ExternalLink,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
@@ -56,6 +56,7 @@ export default function GoldPriceChart() {
   const [purity, setPurity] = useState<PurityGrade>(PurityGrade.K24);
   const [timeframe, setTimeframe] = useState<'7D' | '1M' | '6M' | '1Y'>('1M');
   const [historyData, setHistoryData] = useState<PriceRecord[]>([]);
+  const [liveRates, setLiveRates] = useState<LivePriceRate[]>([]);
   const [currentRate, setCurrentRate] = useState<LivePriceRate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -94,7 +95,7 @@ export default function GoldPriceChart() {
         ]);
 
         if (histRes.success && Array.isArray(histRes.data)) {
-          // Filter out any corrupted or non-numeric records
+          // Strictly filter for valid positive numerical rates
           const sanitized = histRes.data.filter(
             (r) => typeof r.rateBdt === 'number' && !isNaN(r.rateBdt) && r.rateBdt > 0,
           );
@@ -104,12 +105,14 @@ export default function GoldPriceChart() {
         }
 
         if (liveRes?.success && Array.isArray(liveRes.data)) {
+          setLiveRates(liveRes.data);
           const match = liveRes.data.find((r) => r.purity === purity) || liveRes.data[0];
           setCurrentRate(match || null);
         }
       } catch (err: any) {
         console.error('Failed to load BAJUS market intelligence:', err);
         setError('Market oracle connection temporarily interrupted. Tap retry to reconnect.');
+        setHistoryData([]);
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -162,19 +165,29 @@ export default function GoldPriceChart() {
     }
   };
 
-  // Calculations derived exclusively from actual records
-  const recordsCount = historyData.length;
+  // Filter actual records strictly matching the selected timeframe window
+  const windowRecords = useMemo(() => {
+    const cutoffTime = Date.now() - days * 24 * 60 * 60 * 1000;
+    return historyData.filter((r) => {
+      const t = new Date(r.timestamp || r.date).getTime();
+      return !isNaN(t) && t >= cutoffTime;
+    });
+  }, [historyData, days]);
+
+  const recordsCount = windowRecords.length;
   const hasMultiplePoints = recordsCount > 1;
+  const isSingleRecord = recordsCount === 1;
+  const isEmpty = recordsCount === 0;
 
   // Prioritize active rate from /gold/prices, fallback to latest historical record
-  const latestHistorical = historyData[historyData.length - 1];
+  const latestHistorical = windowRecords[windowRecords.length - 1] || historyData[historyData.length - 1];
   const activeRateBdt = currentRate ? currentRate.buyPricePerGramBdt : latestHistorical?.rateBdt || 0;
   const activeBhoriBdt = currentRate
     ? currentRate.buyPricePerBhoriBdt
     : Math.round(activeRateBdt * CONVERSIONS.GRAMS_PER_BHORI);
 
   // Period delta calculations (strictly guarded when records >= 2)
-  const startRate = historyData[0]?.rateBdt || 0;
+  const startRate = windowRecords[0]?.rateBdt || 0;
   const endRate = latestHistorical?.rateBdt || 0;
   const periodDiff = hasMultiplePoints ? endRate - startRate : 0;
   const periodPct =
@@ -183,12 +196,27 @@ export default function GoldPriceChart() {
       : 0;
   const isPeriodPositive = periodDiff >= 0;
 
-  // Period min / max
-  const ratesList = historyData.map((d) => d.rateBdt);
+  // Period min / max for reference lines and summary
+  const ratesList = windowRecords.map((d) => d.rateBdt);
   const minRate = hasMultiplePoints ? Math.min(...ratesList) : activeRateBdt;
   const maxRate = hasMultiplePoints ? Math.max(...ratesList) : activeRateBdt;
 
-  // Stale detection
+  // Dynamic Y-axis domain to prevent flat or squeezed chart curves
+  const yDomain = useMemo(() => {
+    if (hasMultiplePoints && ratesList.length > 0) {
+      const min = Math.min(...ratesList);
+      const max = Math.max(...ratesList);
+      const padding = Math.max(50, Math.round((max - min) * 0.15));
+      return [Math.max(0, min - padding), max + padding];
+    }
+    if (activeRateBdt > 0) {
+      const offset = Math.round(activeRateBdt * 0.05);
+      return [Math.max(0, activeRateBdt - offset), activeRateBdt + offset];
+    }
+    return ['auto', 'auto'];
+  }, [hasMultiplePoints, ratesList, activeRateBdt]);
+
+  // Stale detection & Metadata
   const isStale = currentRate?.isStale || false;
   const sourceName = currentRate?.source || latestHistorical?.source || 'BAJUS_OFFICIAL_BENCHMARK';
   const effectiveTimestamp = currentRate?.effectiveAt || latestHistorical?.timestamp;
@@ -200,6 +228,25 @@ export default function GoldPriceChart() {
     [PurityGrade.K22]: '91.6% Fineness (Standard Jewellery)',
     [PurityGrade.K21]: '87.5% Fineness (Traditional Gold)',
     [PurityGrade.K18]: '75.0% Fineness (Ornament Grade)',
+  };
+
+  // Only display purities where actual backend data exists (focusing primarily on 24K and 22K)
+  const availablePurities = useMemo(() => {
+    const standardPurities = [PurityGrade.K24, PurityGrade.K22, PurityGrade.K21, PurityGrade.K18];
+    if (liveRates.length === 0) {
+      return [PurityGrade.K24, PurityGrade.K22];
+    }
+    return standardPurities.filter((p) => liveRates.some((r) => r.purity === p));
+  }, [liveRates]);
+
+  const formatChartDate = (dateStr: string): string => {
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-BD', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
   };
 
   return (
@@ -273,13 +320,13 @@ export default function GoldPriceChart() {
 
         {/* Controls: Purity Switcher, Timeframe & Refresh */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Purity Selector */}
+          {/* Purity Selector (Only for purities where actual data is available) */}
           <div
             role="tablist"
             aria-label="Purity Grade Selector"
             className="inline-flex items-center rounded-xl bg-[#070C16] p-1 border border-[#D4AF63]/20 text-xs font-semibold"
           >
-            {[PurityGrade.K24, PurityGrade.K22, PurityGrade.K21, PurityGrade.K18].map((p) => {
+            {availablePurities.map((p) => {
               const isActive = purity === p;
               return (
                 <button
@@ -299,7 +346,7 @@ export default function GoldPriceChart() {
             })}
           </div>
 
-          {/* Timeframe Selector */}
+          {/* Timeframe Selector (7D, 1M, 6M, 1Y) */}
           <div
             role="tablist"
             aria-label="Historical Timeframe Selector"
@@ -356,7 +403,7 @@ export default function GoldPriceChart() {
       )}
 
       {/* =========================================================================
-          3. INTELLIGENT PRICE SUMMARY CARDS
+          3. PRICE SUMMARY METRICS CARDS
          ========================================================================= */}
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 animate-pulse">
@@ -409,11 +456,11 @@ export default function GoldPriceChart() {
             </span>
           </div>
 
-          {/* Card 3: Period Trajectory & Delta */}
+          {/* Card 3: Period Trajectory & Delta (Strictly calculated when records >= 2) */}
           <div className="p-4 rounded-2xl bg-[#070C16]/80 border border-[#D4AF63]/20 hover:border-[#D4AF63]/40 transition-colors">
             <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#94A3B8] mb-1">
               <span>Period Delta</span>
-              <span className="text-[10px] text-[#D4AF63]">{timeframe}</span>
+              <span className="text-[10px] text-[#D4AF63] font-bold">{timeframe}</span>
             </div>
             {hasMultiplePoints ? (
               <>
@@ -475,7 +522,7 @@ export default function GoldPriceChart() {
             )}
           </div>
 
-          {/* Card 5: Spread & Fee Structure Transparency */}
+          {/* Card 5: Fee & Spread Transparency */}
           <div className="p-4 rounded-2xl bg-[#070C16]/80 border border-[#D4AF63]/20 hover:border-[#D4AF63]/40 transition-colors col-span-2 sm:col-span-1">
             <span className="text-[10px] font-mono uppercase tracking-wider text-[#94A3B8] block mb-1">
               Fee & Spread Transparency
@@ -492,7 +539,7 @@ export default function GoldPriceChart() {
       )}
 
       {/* =========================================================================
-          4. INTERACTIVE HISTORICAL PRICE CHART AREA
+          4. INTERACTIVE HISTORICAL PRICE CHART & EMPTY STATE AREA
          ========================================================================= */}
       <div className="rounded-2xl bg-[#070C16]/60 border border-[#D4AF63]/15 p-4 sm:p-6 space-y-4">
         {isLoading ? (
@@ -502,174 +549,215 @@ export default function GoldPriceChart() {
               Streaming cryptographically verified circular records...
             </span>
           </div>
-        ) : error || recordsCount === 0 ? (
-          <div className="h-64 flex flex-col items-center justify-center text-center space-y-2.5 p-6 text-[#94A3B8]">
-            <Info className="w-7 h-7 text-[#D4AF63]" />
-            <h4 className="text-sm font-bold text-[#F8F6F0]">
-              {error ? 'Unable to Load Historical Oracle' : 'No Benchmark Records in Selected Window'}
-            </h4>
-            <p className="text-xs max-w-md text-[#64748B]">
-              {error
-                ? error
-                : `No official BAJUS circulars were recorded for ${purity} within the last ${timeframe}. Try selecting a wider timeframe (1M or 1Y) or 24K purity.`}
-            </p>
-          </div>
-        ) : hasMultiplePoints ? (
-          /* Multi-point Interactive Line/Area Chart */
-          <div className="h-64 sm:h-80 md:h-96 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={historyData}
-                margin={{ top: 12, right: 16, left: -16, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="aurumGoldAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#D4AF63" stopOpacity={0.28} />
-                    <stop offset="95%" stopColor="#D4AF63" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  stroke="rgba(212, 175, 99, 0.08)"
-                  strokeDasharray="3 3"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="date"
-                  stroke="#94A3B8"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={{ stroke: 'rgba(212, 175, 99, 0.2)' }}
-                  tickFormatter={(val: string) => {
-                    try {
-                      const d = new Date(val);
-                      return d.toLocaleDateString('en-BD', { month: 'short', day: 'numeric' });
-                    } catch {
-                      return val;
-                    }
-                  }}
-                />
-                <YAxis
-                  domain={['auto', 'auto']}
-                  stroke="#94A3B8"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={{ stroke: 'rgba(212, 175, 99, 0.2)' }}
-                  tickFormatter={(v: number) => `৳${Math.round(v).toLocaleString()}`}
-                />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const pt = payload[0].payload as PriceRecord;
-                      return (
-                        <div className="rounded-xl bg-[#070C16] border border-[#D4AF63]/50 p-3.5 shadow-2xl backdrop-blur-md space-y-1.5 text-xs font-mono">
-                          <div className="flex items-center justify-between text-[10px] text-[#94A3B8] pb-1 border-b border-[#D4AF63]/15">
-                            <span>{pt.date}</span>
-                            <span className="font-bold text-[#D4AF63]">{pt.purity}</span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-[#64748B] block">Benchmark Rate:</span>
-                            <span className="text-base font-bold text-[#F8F6F0]">
-                              {formatBDT(pt.rateBdt)} / gram
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-[#D4AF63]">
-                            {formatBDT(pt.ratePerBhoriBdt)} / bhori
-                          </div>
-                          <div className="text-[9px] text-[#64748B] pt-1 border-t border-[#D4AF63]/10">
-                            Source: {pt.source}
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="rateBdt"
-                  stroke="#D4AF63"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#aurumGoldAreaGradient)"
-                  dot={{ r: 3, fill: '#D4AF63', stroke: '#0B1220', strokeWidth: 1.5 }}
-                  activeDot={{
-                    r: 6,
-                    fill: '#F8F6F0',
-                    stroke: '#D4AF63',
-                    strokeWidth: 2,
-                    className: 'shadow-gold-glow',
-                  }}
-                />
-                {minRate > 0 && (
-                  <ReferenceLine
-                    y={minRate}
-                    stroke="rgba(244, 63, 94, 0.35)"
-                    strokeDasharray="4 4"
-                    label={{
-                      value: `Low: ${formatBDT(minRate)}`,
-                      fill: '#94A3B8',
-                      fontSize: 10,
-                      position: 'insideBottomRight',
-                    }}
-                  />
-                )}
-                {maxRate > 0 && maxRate !== minRate && (
-                  <ReferenceLine
-                    y={maxRate}
-                    stroke="rgba(16, 185, 129, 0.35)"
-                    strokeDasharray="4 4"
-                    label={{
-                      value: `High: ${formatBDT(maxRate)}`,
-                      fill: '#D4AF63',
-                      fontSize: 10,
-                      position: 'insideTopRight',
-                    }}
-                  />
-                )}
-              </AreaChart>
-            </ResponsiveContainer>
+        ) : error || isEmpty ? (
+          /* Zero-Records Empty State for Selected Time Window */
+          <div className="h-64 sm:h-80 flex flex-col items-center justify-center text-center space-y-3 p-6 text-[#94A3B8]">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+              <CalendarX className="w-6 h-6" />
+            </div>
+            <div className="space-y-1 max-w-md">
+              <h4 className="text-sm font-bold text-[#F8F6F0]">
+                {error ? 'Unable to Load Historical Oracle' : 'No Benchmark Records in Selected Window'}
+              </h4>
+              <p className="text-xs text-[#64748B]">
+                {error
+                  ? error
+                  : `0 official BAJUS circulars were recorded for ${purity} within the last ${timeframe}. Try selecting a wider timeframe (1M or 1Y) or 24K purity.`}
+              </p>
+            </div>
           </div>
         ) : (
-          /* Single-Point Focal Indicator (Truthful presentation when only 1 record exists) */
-          <div className="p-6 sm:p-8 rounded-2xl bg-[#0B1220] border border-[#D4AF63]/25 space-y-4 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-[#D4AF63]/15 border border-[#D4AF63]/40 flex items-center justify-center text-[#D4AF63] mx-auto">
-              <Calendar className="w-6 h-6" />
+          /* Real Historical Trend Chart Visualization (Works for both single and multiple recorded points) */
+          <div className="space-y-4">
+            <div className="h-64 sm:h-80 md:h-96 w-full pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={windowRecords}
+                  margin={{ top: 16, right: 16, left: -10, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="aurumGoldAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#D4AF63" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="#D4AF63" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    stroke="rgba(212, 175, 99, 0.08)"
+                    strokeDasharray="3 3"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="date"
+                    stroke="#94A3B8"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={{ stroke: 'rgba(212, 175, 99, 0.2)' }}
+                    tickFormatter={(val: string) => {
+                      try {
+                        const d = new Date(val);
+                        if (isNaN(d.getTime())) return val;
+                        return d.toLocaleDateString('en-BD', { month: 'short', day: 'numeric' });
+                      } catch {
+                        return val;
+                      }
+                    }}
+                  />
+                  <YAxis
+                    domain={yDomain}
+                    stroke="#94A3B8"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={{ stroke: 'rgba(212, 175, 99, 0.2)' }}
+                    tickFormatter={(v: number) => `৳${Math.round(v).toLocaleString()}`}
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const pt = payload[0].payload as PriceRecord;
+                        return (
+                          <div className="rounded-xl bg-[#070C16] border border-[#D4AF63]/50 p-3.5 shadow-2xl backdrop-blur-md space-y-2 text-xs font-mono min-w-[210px]">
+                            <div className="flex items-center justify-between text-[10px] text-[#94A3B8] pb-1.5 border-b border-[#D4AF63]/15">
+                              <span>{formatChartDate(pt.date)}</span>
+                              <span className="font-bold text-[#D4AF63] px-1.5 py-0.5 rounded bg-[#D4AF63]/15 border border-[#D4AF63]/30">
+                                {pt.purity}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-[#64748B] block uppercase tracking-wider">
+                                Benchmark Rate:
+                              </span>
+                              <div className="text-base font-bold text-[#F8F6F0]">
+                                {formatBDT(pt.rateBdt)}{' '}
+                                <span className="text-xs text-[#94A3B8] font-normal">/ gram</span>
+                              </div>
+                            </div>
+                            <div className="text-[11px] text-[#D4AF63] flex items-center justify-between">
+                              <span className="text-[#64748B]">Bhori (11.664g):</span>
+                              <span className="font-bold">{formatBDT(pt.ratePerBhoriBdt)}</span>
+                            </div>
+                            {pt.timestamp && (
+                              <div className="text-[9px] text-[#94A3B8] pt-1.5 border-t border-[#D4AF63]/10 flex items-center justify-between">
+                                <span>Timestamp:</span>
+                                <span>{formatDateTime(pt.timestamp)}</span>
+                              </div>
+                            )}
+                            <div className="text-[9px] text-[#64748B] flex items-center justify-between">
+                              <span>Source:</span>
+                              <span className="text-[#94A3B8] truncate max-w-[120px]">
+                                {pt.source}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="rateBdt"
+                    stroke="#D4AF63"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#aurumGoldAreaGradient)"
+                    dot={{
+                      r: isSingleRecord ? 6 : 3,
+                      fill: '#D4AF63',
+                      stroke: '#0B1220',
+                      strokeWidth: 2,
+                    }}
+                    activeDot={{
+                      r: isSingleRecord ? 8 : 6,
+                      fill: '#F8F6F0',
+                      stroke: '#D4AF63',
+                      strokeWidth: 2.5,
+                      className: 'shadow-gold-glow',
+                    }}
+                  />
+
+                  {/* Single-point baseline reference level */}
+                  {isSingleRecord && activeRateBdt > 0 && (
+                    <ReferenceLine
+                      y={activeRateBdt}
+                      stroke="#D4AF63"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                      label={{
+                        value: `Recorded Benchmark: ${formatBDT(activeRateBdt)} / g`,
+                        fill: '#D4AF63',
+                        fontSize: 11,
+                        position: 'insideTopLeft',
+                      }}
+                    />
+                  )}
+
+                  {/* Multi-point period min & max guidelines */}
+                  {hasMultiplePoints && minRate > 0 && (
+                    <ReferenceLine
+                      y={minRate}
+                      stroke="rgba(244, 63, 94, 0.45)"
+                      strokeDasharray="4 4"
+                      label={{
+                        value: `Low: ${formatBDT(minRate)}`,
+                        fill: '#94A3B8',
+                        fontSize: 10,
+                        position: 'insideBottomRight',
+                      }}
+                    />
+                  )}
+                  {hasMultiplePoints && maxRate > 0 && maxRate !== minRate && (
+                    <ReferenceLine
+                      y={maxRate}
+                      stroke="rgba(16, 185, 129, 0.45)"
+                      strokeDasharray="4 4"
+                      label={{
+                        value: `High: ${formatBDT(maxRate)}`,
+                        fill: '#D4AF63',
+                        fontSize: 10,
+                        position: 'insideTopRight',
+                      }}
+                    />
+                  )}
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
 
-            <div className="space-y-1">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-[#D4AF63] font-bold">
-                Archived Benchmark Circular Established
-              </span>
-              <h4 className="font-serif-luxury text-xl sm:text-2xl font-bold text-[#F8F6F0]">
-                {formatBDT(activeRateBdt)} / gram • {purity}
-              </h4>
-              <p className="text-xs sm:text-sm text-[#94A3B8] font-mono">
-                Equivalent: <strong className="text-[#D4AF63]">{formatBDT(activeBhoriBdt)}</strong>{' '}
-                per standard Bhori (11.664g)
-              </p>
-            </div>
-
-            <div className="max-w-xl mx-auto p-4 rounded-xl bg-[#070C16] border border-[#D4AF63]/15 text-left space-y-2 text-xs leading-relaxed text-[#94A3B8]">
-              <div className="flex items-center space-x-2 text-[#D4AF63] font-bold">
-                <Info className="w-4 h-4 shrink-0" />
-                <span>Historical Time-Series Accumulation Notice</span>
+            {/* Compact Elegant Empty-State Component (when only 1 record is available) */}
+            {isSingleRecord && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-[#0B1220]/90 border border-[#D4AF63]/25 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-start space-x-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-[#D4AF63]/15 border border-[#D4AF63]/30 flex items-center justify-center text-[#D4AF63] shrink-0 mt-0.5">
+                    <Info className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h5 className="text-xs sm:text-sm font-bold text-[#F8F6F0]">
+                        Historical trend unavailable — additional verified benchmark records are required.
+                      </h5>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[#D4AF63]/15 text-[#D4AF63] border border-[#D4AF63]/30">
+                        1 Actual Record Available ({timeframe})
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#94A3B8] leading-relaxed max-w-3xl">
+                      Latest benchmark: <strong className="text-[#F8F6F0]">{formatBDT(activeRateBdt)} / gram</strong> ({purity}) recorded on{' '}
+                      <strong className="text-[#F8F6F0]">{formatDateTime(effectiveTimestamp || latestHistorical?.timestamp || '')}</strong>.
+                      AurumSave maintains strict financial integrity and never synthesizes artificial trend curves. Multi-day trajectory lines and volatility ranges will populate automatically as subsequent official BAJUS morning circulars are archived.
+                    </p>
+                  </div>
+                </div>
+                <div className="shrink-0 text-left md:text-right md:border-l md:border-[#D4AF63]/15 md:pl-5 space-y-0.5">
+                  <span className="text-[10px] font-mono uppercase text-[#64748B] block">Benchmark Authority</span>
+                  <span className="text-xs font-mono font-bold text-[#D4AF63]">BAJUS Central Committee</span>
+                  <span className="text-[10px] text-emerald-400 font-mono block">100% Vault Segregated</span>
+                </div>
               </div>
-              <p>
-                {latestHistorical?.notice ||
-                  'The AurumSave oracle has officially catalogued this active benchmark circular. In accordance with strict financial integrity standards, synthetic trend points are never fabricated.'}
-              </p>
-              <p className="text-[11px] text-[#64748B]">
-                As BAJUS issues subsequent circulars (typically every trading morning at ~10:00 AM BST
-                or during significant London Bullion Market / forex shifts), multi-day trend curves
-                and volatility bands will populate automatically.
-              </p>
-            </div>
+            )}
           </div>
         )}
       </div>
 
       {/* =========================================================================
-          5. MARKET INTELLIGENCE FOOTER & DATA SPECIFICATION
+          5. MARKET INTELLIGENCE FOOTER & SPECIFICATION
          ========================================================================= */}
       <div className="pt-4 border-t border-[#D4AF63]/15 space-y-4">
         {/* Metric Specification Strip */}
