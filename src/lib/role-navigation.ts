@@ -73,19 +73,19 @@ export const ROLE_NAVIGATION_CONFIGS: Record<Role, RoleNavConfig> = {
     roleTitleBn: 'ব্যক্তিগত গ্রাহক',
     navItems: [
       { id: 'home', labelEn: 'Home', labelBn: 'হোম', href: '/dashboard', icon: Home, exact: true, groupEn: 'Main', groupBn: 'মূল' },
-      { id: 'buy-gold', labelEn: 'Buy Gold', labelBn: 'স্বর্ণ ক্রয়', href: '/trade?type=BUY', icon: ShoppingBag, groupEn: 'Main', groupBn: 'মূল' },
-      { id: 'sell-gold', labelEn: 'Sell Gold', labelBn: 'স্বর্ণ বিক্রয়', href: '/trade?type=SELL', icon: Coins, groupEn: 'Main', groupBn: 'মূল' },
+      { id: 'buy-gold', labelEn: 'Buy Gold', labelBn: 'স্বর্ণ ক্রয়', href: '/dashboard/trade?type=BUY', icon: ShoppingBag, groupEn: 'Main', groupBn: 'মূল' },
+      { id: 'sell-gold', labelEn: 'Sell Gold', labelBn: 'স্বর্ণ বিক্রয়', href: '/dashboard/trade?type=SELL', icon: Coins, groupEn: 'Main', groupBn: 'মূল' },
       { id: 'my-gold', labelEn: 'My Gold', labelBn: 'আমার স্বর্ণ', href: '/dashboard/portfolio', icon: PieChart, groupEn: 'Vault & Savings', groupBn: 'ভল্ট ও সঞ্চয়' },
-      { id: 'goals', labelEn: 'Savings Goals', labelBn: 'সঞ্চয় লক্ষ্য', href: '/goals', icon: Target, groupEn: 'Vault & Savings', groupBn: 'ভল্ট ও সঞ্চয়' },
+      { id: 'goals', labelEn: 'Savings Goals', labelBn: 'সঞ্চয় লক্ষ্য', href: '/dashboard/goals', icon: Target, groupEn: 'Vault & Savings', groupBn: 'ভল্ট ও সঞ্চয়' },
       { id: 'autosave', labelEn: 'AutoSave', labelBn: 'অটোসেভ কিস্তি', href: '/dashboard/auto-save', icon: Repeat, groupEn: 'Vault & Savings', groupBn: 'ভল্ট ও সঞ্চয়' },
       { id: 'transactions', labelEn: 'Transactions', labelBn: 'লেনদেন বিবরণী', href: '/dashboard#activity', icon: Receipt, groupEn: 'Vault & Savings', groupBn: 'ভল্ট ও সঞ্চয়' },
       { id: 'passport', labelEn: 'Gold Passport', labelBn: 'গোল্ড পাসপোর্ট', href: '/dashboard/gold-passport', icon: Award, groupEn: 'Intelligence & Tools', groupBn: 'টুলস ও তথ্য' },
       { id: 'calculator', labelEn: 'Gold Calculator', labelBn: 'স্বর্ণ ক্যালকুলেটর', href: '/dashboard/simulator', icon: Calculator, groupEn: 'Intelligence & Tools', groupBn: 'টুলস ও তথ্য' },
-      { id: 'learn', labelEn: 'Learn', labelBn: 'গোল্ড একাডেমি', href: '/academy', icon: BookOpen, groupEn: 'Account & Support', groupBn: 'সহায়তা ও অ্যাকাউন্ট' },
-      { id: 'support', labelEn: 'Support', labelBn: 'গ্রাহক সহায়তা', href: '/support', icon: Headphones, groupEn: 'Account & Support', groupBn: 'সহায়তা ও অ্যাকাউন্ট' },
-      { id: 'security', labelEn: 'Security', labelBn: 'নিরাপত্তা ও ২এফএ', href: '/security', icon: Shield, groupEn: 'Account & Support', groupBn: 'সহায়তা ও অ্যাকাউন্ট' },
+      { id: 'learn', labelEn: 'Learn', labelBn: 'গোল্ড একাডেমি', href: '/dashboard/academy', icon: BookOpen, groupEn: 'Account & Support', groupBn: 'সহায়তা ও অ্যাকাউন্ট' },
+      { id: 'support', labelEn: 'Support', labelBn: 'গ্রাহক সহায়তা', href: '/dashboard/support', icon: Headphones, groupEn: 'Account & Support', groupBn: 'সহায়তা ও অ্যাকাউন্ট' },
+      { id: 'security', labelEn: 'Security', labelBn: 'নিরাপত্তা ও ২এফএ', href: '/dashboard/security', icon: Shield, groupEn: 'Account & Support', groupBn: 'সহায়তা ও অ্যাকাউন্ট' },
       { id: 'profile', labelEn: 'Profile', labelBn: 'প্রোফাইল', href: '/dashboard#profile', icon: User, groupEn: 'Account & Support', groupBn: 'সহায়তা ও অ্যাকাউন্ট' },
-      { id: 'settings', labelEn: 'Settings', labelBn: 'সেটিংস', href: '/security', icon: Settings, groupEn: 'Account & Support', groupBn: 'সহায়তা ও অ্যাকাউন্ট' },
+      { id: 'settings', labelEn: 'Settings', labelBn: 'সেটিংস', href: '/dashboard/security', icon: Settings, groupEn: 'Account & Support', groupBn: 'সহায়তা ও অ্যাকাউন্ট' },
     ],
     groups: [
       {
@@ -93,8 +93,8 @@ export const ROLE_NAVIGATION_CONFIGS: Record<Role, RoleNavConfig> = {
         groupBn: 'মূল মেনু',
         items: [
           { id: 'home', labelEn: 'Home', labelBn: 'হোম', href: '/dashboard', icon: Home, exact: true },
-          { id: 'buy-gold', labelEn: 'Buy Gold', labelBn: 'স্বর্ণ ক্রয়', href: '/trade?type=BUY', icon: ShoppingBag },
-          { id: 'sell-gold', labelEn: 'Sell Gold', labelBn: 'স্বর্ণ বিক্রয়', href: '/trade?type=SELL', icon: Coins },
+          { id: 'buy-gold', labelEn: 'Buy Gold', labelBn: 'স্বর্ণ ক্রয়', href: '/dashboard/trade?type=BUY', icon: ShoppingBag },
+          { id: 'sell-gold', labelEn: 'Sell Gold', labelBn: 'স্বর্ণ বিক্রয়', href: '/dashboard/trade?type=SELL', icon: Coins },
         ],
       },
       {
@@ -102,7 +102,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<Role, RoleNavConfig> = {
         groupBn: 'ভল্ট ও সঞ্চয়',
         items: [
           { id: 'my-gold', labelEn: 'My Gold', labelBn: 'আমার স্বর্ণ', href: '/dashboard/portfolio', icon: PieChart },
-          { id: 'goals', labelEn: 'Savings Goals', labelBn: 'সঞ্চয় লক্ষ্য', href: '/goals', icon: Target },
+          { id: 'goals', labelEn: 'Savings Goals', labelBn: 'সঞ্চয় লক্ষ্য', href: '/dashboard/goals', icon: Target },
           { id: 'autosave', labelEn: 'AutoSave', labelBn: 'অটোসেভ কিস্তি', href: '/dashboard/auto-save', icon: Repeat },
           { id: 'transactions', labelEn: 'Transactions', labelBn: 'লেনদেন বিবরণী', href: '/dashboard#activity', icon: Receipt },
         ],
@@ -119,18 +119,18 @@ export const ROLE_NAVIGATION_CONFIGS: Record<Role, RoleNavConfig> = {
         groupEn: 'Account & Support',
         groupBn: 'সহায়তা ও অ্যাকাউন্ট',
         items: [
-          { id: 'learn', labelEn: 'Learn', labelBn: 'গোল্ড একাডেমি', href: '/academy', icon: BookOpen },
-          { id: 'support', labelEn: 'Support', labelBn: 'গ্রাহক সহায়তা', href: '/support', icon: Headphones },
-          { id: 'security', labelEn: 'Security', labelBn: 'নিরাপত্তা', href: '/security', icon: Shield },
-          { id: 'settings', labelEn: 'Settings', labelBn: 'সেটিংস', href: '/security', icon: Settings },
+          { id: 'learn', labelEn: 'Learn', labelBn: 'গোল্ড একাডেমি', href: '/dashboard/academy', icon: BookOpen },
+          { id: 'support', labelEn: 'Support', labelBn: 'গ্রাহক সহায়তা', href: '/dashboard/support', icon: Headphones },
+          { id: 'security', labelEn: 'Security', labelBn: 'নিরাপত্তা', href: '/dashboard/security', icon: Shield },
+          { id: 'settings', labelEn: 'Settings', labelBn: 'সেটিংস', href: '/dashboard/security', icon: Settings },
         ],
       },
     ],
     primaryNav: [
       { id: 'home', labelEn: 'Home', labelBn: 'হোম', href: '/dashboard', icon: Home, exact: true },
-      { id: 'trade', labelEn: 'Buy Gold', labelBn: 'স্বর্ণ ক্রয়', href: '/trade?type=BUY', icon: ShoppingBag },
+      { id: 'trade', labelEn: 'Buy Gold', labelBn: 'স্বর্ণ ক্রয়', href: '/dashboard/trade?type=BUY', icon: ShoppingBag },
       { id: 'my-gold', labelEn: 'My Gold', labelBn: 'আমার স্বর্ণ', href: '/dashboard/portfolio', icon: PieChart },
-      { id: 'goals', labelEn: 'Goals', labelBn: 'সঞ্চয় লক্ষ্য', href: '/goals', icon: Target },
+      { id: 'goals', labelEn: 'Goals', labelBn: 'সঞ্চয় লক্ষ্য', href: '/dashboard/goals', icon: Target },
     ],
     moreNav: [],
   },
@@ -356,7 +356,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<Role, RoleNavConfig> = {
       { id: 'reports', labelEn: 'Reports', labelBn: 'নিরীক্ষা রিপোর্ট', href: '/staff/auditor#reports', icon: FileText, groupEn: 'Cryptographic Integrity', groupBn: 'ক্রিপ্টোগ্রাফিক সুরক্ষা' },
       { id: 'verification', labelEn: 'Verification', labelBn: 'চেইন ভেরিফিকেশন', href: '/staff/auditor#verify', icon: CheckCircle2, groupEn: 'Cryptographic Integrity', groupBn: 'ক্রিপ্টোগ্রাফিক সুরক্ষা' },
       { id: 'exports', labelEn: 'Exports', labelBn: 'অডিট এক্সপোর্ট', href: '/staff/auditor#exports', icon: Download, groupEn: 'Cryptographic Integrity', groupBn: 'ক্রিপ্টোগ্রাফিক সুরক্ষা' },
-      { id: 'settings', labelEn: 'Settings', labelBn: 'সেটিংস', href: '/security', icon: Settings, groupEn: 'System', groupBn: 'সিস্টেম' },
+      { id: 'settings', labelEn: 'Settings', labelBn: 'সেটিংস', href: '/staff/auditor#settings', icon: Settings, groupEn: 'System', groupBn: 'সিস্টেম' },
     ],
     groups: [
       {
@@ -391,4 +391,24 @@ export function getRoleNavConfig(role?: Role): RoleNavConfig {
     return ROLE_NAVIGATION_CONFIGS[Role.CUSTOMER];
   }
   return ROLE_NAVIGATION_CONFIGS[role];
+}
+
+export function getRoleDashboardRoute(role?: Role): string {
+  if (!role) return '/dashboard';
+  switch (role) {
+    case Role.SUPER_ADMIN:
+    case Role.ADMIN:
+      return '/staff/admin';
+    case Role.KYC_OFFICER:
+      return '/staff/compliance';
+    case Role.FINANCE_OFFICER:
+      return '/staff/operations';
+    case Role.SUPPORT_AGENT:
+      return '/staff/support';
+    case Role.AUDITOR:
+      return '/staff/auditor';
+    case Role.CUSTOMER:
+    default:
+      return '/dashboard';
+  }
 }

@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
 import { useLanguage } from '../../lib/language-context';
-import { getRoleNavConfig } from '../../lib/role-navigation';
+import { getRoleNavConfig, getRoleDashboardRoute } from '../../lib/role-navigation';
 import {
   Search,
   Bell,
@@ -13,6 +14,8 @@ import {
   LogOut,
   Shield,
   ChevronDown,
+  ArrowLeft,
+  LayoutDashboard,
 } from 'lucide-react';
 
 export default function DashboardHeader({
@@ -24,9 +27,12 @@ export default function DashboardHeader({
 }) {
   const { user, logout } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
+  const pathname = usePathname();
   const [profileOpen, setProfileOpen] = useState(false);
 
   const roleConfig = getRoleNavConfig(user?.role);
+  const mainDashboardRoute = getRoleDashboardRoute(user?.role);
+  const isSubpage = pathname !== '/dashboard' && pathname !== mainDashboardRoute;
 
   return (
     <header className="sticky top-0 z-30 bg-[#0B1220]/95 backdrop-blur-md border-b border-[#D4AF63]/15 transition-colors">
@@ -36,16 +42,32 @@ export default function DashboardHeader({
               MOBILE HEADER (< 768px): Compact Logo, Notifications, Avatar
              ========================================================================= */}
           <div className="flex md:hidden items-center justify-between w-full">
-            <Link href="/dashboard" className="flex items-center space-x-2.5 group">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#D4AF63] via-[#F5E6B3] to-[#996515] flex items-center justify-center shadow-gold-glow">
-                <span className="font-serif-luxury font-black text-[#0B1220] text-sm tracking-wider">
-                  Au
+            {isSubpage ? (
+              <div className="flex items-center space-x-2">
+                <Link
+                  href={mainDashboardRoute}
+                  className="flex items-center space-x-1.5 py-1.5 px-3 rounded-xl bg-[#111A2F] border border-[#D4AF63]/30 text-xs font-bold text-[#D4AF63] active:scale-95 transition-all shadow-sm"
+                  aria-label="Back to Dashboard"
+                >
+                  <ArrowLeft className="w-4 h-4 text-[#D4AF63]" />
+                  <span>{language === 'bn' ? 'ড্যাশবোর্ড' : 'Back'}</span>
+                </Link>
+                <span className="font-serif-luxury text-sm font-bold text-[#F8F6F0] truncate max-w-[130px]">
+                  Aurum<span className="text-[#D4AF63] font-sans font-light">Save</span>
                 </span>
               </div>
-              <span className="font-serif-luxury text-lg font-bold text-[#F8F6F0]">
-                Aurum<span className="text-[#D4AF63] font-sans font-light">Save</span>
-              </span>
-            </Link>
+            ) : (
+              <Link href={mainDashboardRoute} className="flex items-center space-x-2.5 group">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#D4AF63] via-[#F5E6B3] to-[#996515] flex items-center justify-center shadow-gold-glow">
+                  <span className="font-serif-luxury font-black text-[#0B1220] text-sm tracking-wider">
+                    Au
+                  </span>
+                </div>
+                <span className="font-serif-luxury text-lg font-bold text-[#F8F6F0]">
+                  Aurum<span className="text-[#D4AF63] font-sans font-light">Save</span>
+                </span>
+              </Link>
+            )}
 
             <div className="flex items-center space-x-2">
               {/* Language Switcher */}
@@ -138,15 +160,15 @@ export default function DashboardHeader({
                   {profileOpen && (
                     <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-[#0B1220] border border-[#D4AF63]/30 shadow-2xl p-2 z-50 space-y-1 animate-fadeIn">
                       <Link
-                        href="/dashboard"
+                        href={mainDashboardRoute}
                         onClick={() => setProfileOpen(false)}
-                        className="flex items-center space-x-2 px-3 py-2 rounded-xl text-xs text-[#94A3B8] hover:text-[#F8F6F0] hover:bg-[#111A2F]"
+                        className="flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-semibold text-[#F8F6F0] bg-[#D4AF63]/15 border border-[#D4AF63]/30 hover:bg-[#D4AF63] hover:text-[#0B1220] transition-all group"
                       >
-                        <UserIcon className="w-3.5 h-3.5 text-[#D4AF63]" />
+                        <LayoutDashboard className="w-3.5 h-3.5 text-[#D4AF63] group-hover:text-[#0B1220] transition-colors" />
                         <span>{language === 'bn' ? 'ড্যাশবোর্ড' : 'Dashboard'}</span>
                       </Link>
                       <Link
-                        href="/security"
+                        href="/dashboard/security"
                         onClick={() => setProfileOpen(false)}
                         className="flex items-center space-x-2 px-3 py-2 rounded-xl text-xs text-[#94A3B8] hover:text-[#F8F6F0] hover:bg-[#111A2F]"
                       >

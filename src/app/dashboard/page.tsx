@@ -315,21 +315,21 @@ export default function DashboardPage() {
             {/* Quick Actions (Desktop Pill Buttons) */}
             <div className="hidden sm:flex flex-wrap items-center gap-2 pt-2 border-t border-[#D4AF63]/15">
               <Link
-                href="/trade?type=BUY"
+                href="/dashboard/trade?type=BUY"
                 className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#D4AF63]/15 hover:bg-[#D4AF63]/25 border border-[#D4AF63]/40 text-[#D4AF63] text-xs font-bold transition-all"
               >
                 <ShoppingBag className="w-3.5 h-3.5" />
                 <span>Buy Gold</span>
               </Link>
               <Link
-                href="/trade?type=SELL"
+                href="/dashboard/trade?type=SELL"
                 className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#111A2F] hover:bg-[#16223D] border border-[#D4AF63]/20 text-[#F8F6F0] text-xs font-semibold transition-all"
               >
                 <Coins className="w-3.5 h-3.5 text-[#D4AF63]" />
                 <span>Sell Gold</span>
               </Link>
               <Link
-                href="/goals"
+                href="/dashboard/goals"
                 className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#111A2F] hover:bg-[#16223D] border border-[#D4AF63]/20 text-[#F8F6F0] text-xs font-semibold transition-all"
               >
                 <Target className="w-3.5 h-3.5 text-[#D4AF63]" />

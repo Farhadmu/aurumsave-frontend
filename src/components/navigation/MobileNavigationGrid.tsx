@@ -36,16 +36,17 @@ export default function MobileNavigationGrid({
       <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
         {roleConfig.navItems.map((item) => {
           const Icon = item.icon;
+          const itemPath = item.href.split('?')[0].split('#')[0];
           const isActive = item.exact
-            ? pathname === item.href
+            ? pathname === item.href || (pathname === itemPath && !item.href.includes('?'))
             : pathname === item.href ||
-              (item.href !== '/dashboard' &&
-                item.href !== '/staff/admin' &&
-                item.href !== '/staff/compliance' &&
-                item.href !== '/staff/operations' &&
-                item.href !== '/staff/support' &&
-                item.href !== '/staff/auditor' &&
-                pathname.startsWith(item.href));
+              (itemPath !== '/dashboard' &&
+                itemPath !== '/staff/admin' &&
+                itemPath !== '/staff/compliance' &&
+                itemPath !== '/staff/operations' &&
+                itemPath !== '/staff/support' &&
+                itemPath !== '/staff/auditor' &&
+                pathname.startsWith(itemPath));
 
           const label = language === 'bn' ? item.labelBn : item.labelEn;
 
