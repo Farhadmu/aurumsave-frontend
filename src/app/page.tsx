@@ -14,6 +14,7 @@ import {
   Sparkles,
   ArrowRight,
   TrendingUp,
+  Clock,
   Award,
   Scale,
   RefreshCw,
@@ -235,6 +236,113 @@ export default function HomePage() {
 
         {/* Real-Data Historical Chart */}
         <GoldPriceChart />
+      </section>
+
+      {/* =========================================================================
+          SECTION 2.5 — BENCHMARK VS AURUMSAVE DIRECT PRICING COMPARISON
+         ========================================================================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="rounded-3xl bg-gradient-to-b from-[#111A2E] to-aurum-card border border-aurum-border-gold/50 p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-aurum-gold/10 rounded-full blur-[80px] pointer-events-none" />
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-aurum-border/60">
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <Badge variant="emerald" size="sm">
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                  Transparent Commerce Advantage
+                </Badge>
+                <span className="text-[11px] font-mono text-aurum-text-dim">
+                  BAJUS Official Benchmark Reference
+                </span>
+              </div>
+              <h2 className="font-serif-luxury text-2xl sm:text-4xl font-bold text-aurum-text">
+                Traditional Retail Jeweller vs. AurumSave Direct Pure Bullion
+              </h2>
+              <p className="text-xs sm:text-sm text-aurum-text-muted mt-1 max-w-2xl leading-relaxed">
+                When saving for your future, paying jewellery making charges and wastage deductions drains your wealth. See exactly how much more pure gold your money buys on AurumSave.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-left md:text-right shrink-0">
+              <span className="text-[10px] uppercase font-mono text-emerald-400 font-bold block">
+                Average Savings on 1 Bhori (24K)
+              </span>
+              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-emerald-300 block">
+                Save ৳7,500 – ৳8,200
+              </span>
+              <span className="text-[10px] text-emerald-400/80">
+                0% making charges • 0% wastage loss
+              </span>
+            </div>
+          </div>
+
+          {/* Comparison Table */}
+          <div className="mt-8 overflow-x-auto">
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-aurum-border text-[11px] uppercase font-mono text-aurum-text-dim">
+                  <th className="pb-3 font-semibold">Pricing Metric</th>
+                  <th className="pb-3 font-semibold text-rose-300">Traditional Jewellery Store</th>
+                  <th className="pb-3 font-semibold text-aurum-gold">AurumSave Digital Bullion</th>
+                  <th className="pb-3 font-semibold text-emerald-400">Your Wealth Advantage</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-aurum-border/40 text-xs">
+                <tr>
+                  <td className="py-4 font-semibold text-aurum-text">Base Gold Rate</td>
+                  <td className="py-4 text-aurum-text-muted">BAJUS Daily Circular Rate</td>
+                  <td className="py-4 text-aurum-text font-mono font-bold">BAJUS Benchmark Rate (৳12,450/g)</td>
+                  <td className="py-4 text-emerald-400 font-semibold">100% Identical Official Base</td>
+                </tr>
+                <tr>
+                  <td className="py-4 font-semibold text-aurum-text">Making Charges (মজুরি)</td>
+                  <td className="py-4 text-rose-300 font-mono">৳350 – ৳600 / gram (4% – 6%)</td>
+                  <td className="py-4 text-emerald-400 font-mono font-bold">৳0 (0% Making Charge)</td>
+                  <td className="py-4 text-emerald-400 font-semibold">Save ৳4,000+ per Bhori</td>
+                </tr>
+                <tr>
+                  <td className="py-4 font-semibold text-aurum-text">Wastage / Cutting Loss</td>
+                  <td className="py-4 text-rose-300 font-mono">2.0% – 3.5% deducted from weight</td>
+                  <td className="py-4 text-emerald-400 font-mono font-bold">0.0% (Zero Bullion Loss)</td>
+                  <td className="py-4 text-emerald-400 font-semibold">100% of gold weight vaulted</td>
+                </tr>
+                <tr>
+                  <td className="py-4 font-semibold text-aurum-text">Assay & Custody Fee</td>
+                  <td className="py-4 text-aurum-text-muted">Locker rental + Home theft risk</td>
+                  <td className="py-4 text-aurum-gold font-mono font-bold">Transparent 0.5% (Itemized)</td>
+                  <td className="py-4 text-emerald-400 font-semibold">Bank-grade insured vaulting included</td>
+                </tr>
+                <tr>
+                  <td className="py-4 font-semibold text-aurum-text">Liquid Sell-Back Spread</td>
+                  <td className="py-4 text-rose-300 font-mono">15% – 20% deduction upon resale</td>
+                  <td className="py-4 text-emerald-400 font-mono font-bold">Tight 2.0% – 2.5% Spread</td>
+                  <td className="py-4 text-emerald-400 font-semibold">Instant liquidity to bKash / Bank</td>
+                </tr>
+                <tr className="bg-aurum-surface/40">
+                  <td className="py-4 font-bold text-aurum-text">Effective 1 Bhori (11.664g) Total</td>
+                  <td className="py-4 font-mono font-bold text-rose-300">~৳153,500 – ৳156,000</td>
+                  <td className="py-4 font-mono font-extrabold text-aurum-gold text-sm sm:text-base">~৳145,940</td>
+                  <td className="py-4 font-mono font-extrabold text-emerald-300 text-sm sm:text-base">Save ৳7,560 – ৳8,200</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-aurum-border/60 gap-3 text-xs text-aurum-text-dim">
+            <div className="flex items-center space-x-2 font-mono text-[11px]">
+              <Clock className="w-3.5 h-3.5 text-aurum-gold" />
+              <span>Prices synchronize daily with official BAJUS circulars. Last updated: 10:00 AM BDST.</span>
+            </div>
+            <Link
+              href="/trade"
+              className="inline-flex items-center space-x-1.5 font-bold text-aurum-gold hover:text-aurum-gold-light"
+            >
+              <span>Verify Rates on Live Trade Desk</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* =========================================================================
@@ -517,10 +625,150 @@ export default function HomePage() {
       </section>
 
       {/* =========================================================================
+          SECTION 6.5 — GROUNDED AI GOLD ADVISOR SHOWCASE
+         ========================================================================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="rounded-3xl bg-gradient-to-br from-[#0F172A] via-aurum-card to-[#0B1220] border border-aurum-gold/30 p-6 sm:p-10 shadow-card-luxury relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-aurum-gold/10 rounded-full blur-[80px] pointer-events-none" />
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-aurum-border/60">
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <Badge variant="gold" size="sm">
+                  <Sparkles className="w-3.5 h-3.5 mr-1 text-aurum-gold" />
+                  Policy-Grounded Intelligence
+                </Badge>
+                <span className="text-[11px] font-mono text-emerald-400">
+                  Zero Financial Hallucination
+                </span>
+              </div>
+              <h2 className="font-serif-luxury text-2xl sm:text-4xl font-bold text-aurum-text">
+                AurumSave AI Gold Advisor
+              </h2>
+              <p className="text-xs sm:text-sm text-aurum-text-muted mt-1 max-w-2xl leading-relaxed">
+                Trained exclusively on official platform manuals, BAJUS market circulars, and Bangladesh financial compliance standards. Never forecasts speculative profits or makes unauthorized changes.
+              </p>
+            </div>
+
+            <Link
+              href="/dashboard/support"
+              className="px-5 py-3 rounded-xl bg-aurum-gold hover:brightness-110 text-aurum-midnight font-bold text-xs shadow-gold-glow flex items-center space-x-2 shrink-0 self-start md:self-auto transition-all"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Ask Advisor Online</span>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            <div className="p-4 rounded-2xl bg-aurum-surface/80 border border-aurum-border space-y-2 hover:border-aurum-gold/40 transition-colors">
+              <span className="text-[10px] font-mono text-aurum-gold uppercase font-bold block">Purity & Karat</span>
+              <h4 className="text-xs font-bold text-aurum-text">&quot;What is the fineness difference between 24K and 22K?&quot;</h4>
+              <p className="text-[11px] text-aurum-text-muted leading-relaxed">
+                24K is 99.9% fine pure bullion for investment; 22K is 91.6% hallmark jewellery grade. Both are physically backed and tracked in milligrams.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-aurum-surface/80 border border-aurum-border space-y-2 hover:border-aurum-gold/40 transition-colors">
+              <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold block">Pricing & Spreads</span>
+              <h4 className="text-xs font-bold text-aurum-text">&quot;How are BAJUS prices updated and quoted?&quot;</h4>
+              <p className="text-[11px] text-aurum-text-muted leading-relaxed">
+                Prices update directly from official daily circulars. Quotes are locked for 5 minutes during checkout to eliminate slippage.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-aurum-surface/80 border border-aurum-border space-y-2 hover:border-aurum-gold/40 transition-colors">
+              <span className="text-[10px] font-mono text-sky-400 uppercase font-bold block">Custody & Safety</span>
+              <h4 className="text-xs font-bold text-aurum-text">&quot;Where is my allocated gold bullion physically kept?&quot;</h4>
+              <p className="text-[11px] text-aurum-text-muted leading-relaxed">
+                Stored in segregated, bank-grade insured vaults in Dhaka under strict double-entry ledger tracking. Zero paper derivatives.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-aurum-surface/80 border border-aurum-border space-y-2 hover:border-aurum-gold/40 transition-colors">
+              <span className="text-[10px] font-mono text-purple-400 uppercase font-bold block">Redemption & Cashout</span>
+              <h4 className="text-xs font-bold text-aurum-text">&quot;Can I sell back to bKash or request physical bars?&quot;</h4>
+              <p className="text-[11px] text-aurum-text-muted leading-relaxed">
+                Sell back anytime 24/7 for instant MFS disbursement, or request certified 1 Bhori (11.664g) bar delivery upon Level-1 KYC.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
           SECTION 7 — INTERACTIVE SAVINGS PLANNER & SIMULATOR
          ========================================================================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <GoldCalculator />
+      </section>
+
+      {/* =========================================================================
+          SECTION 7.5 — OPERATIONAL PHYSICAL BULLION REDEMPTION & HALLMARKING
+         ========================================================================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="rounded-3xl bg-aurum-card border border-aurum-border-gold/40 p-6 sm:p-10 shadow-card-luxury relative overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-aurum-border/60">
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <Badge variant="gold" size="sm">
+                  <Truck className="w-3.5 h-3.5 mr-1" />
+                  Real Physical Delivery Workflow
+                </Badge>
+                <span className="text-[11px] font-mono text-aurum-text-dim">
+                  Authentic Custody to Hand
+                </span>
+              </div>
+              <h2 className="font-serif-luxury text-2xl sm:text-4xl font-bold text-aurum-text">
+                Physical Bullion Redemption & Assay Certification
+              </h2>
+              <p className="text-xs sm:text-sm text-aurum-text-muted mt-1 max-w-2xl leading-relaxed">
+                Digital savings convert into tangible sovereign bullion. When your cumulative vaulted holdings reach 1 Bhori (11.664g), you have the legal right to request physical bar delivery.
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Link
+                href="/dashboard/gold-passport"
+                className="px-5 py-3 rounded-xl bg-aurum-surface border border-aurum-border hover:border-aurum-gold/50 text-aurum-text font-bold text-xs transition-all flex items-center space-x-2"
+              >
+                <Award className="w-4 h-4 text-aurum-gold" />
+                <span>View Gold Passport</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div className="p-5 rounded-2xl bg-aurum-surface/80 border border-aurum-border space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-aurum-gold/15 border border-aurum-gold/30 flex items-center justify-center text-aurum-gold">
+                <Scale className="w-5 h-5" />
+              </div>
+              <h4 className="font-bold text-sm text-aurum-text">1. Minimum 1 Bhori Threshold</h4>
+              <p className="text-xs text-aurum-text-muted leading-relaxed">
+                To prevent unviable fractional minting costs, physical redemption opens once your verified vault balance reaches 11.664 grams (1 Bhori) of 24K or 22K gold.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-aurum-surface/80 border border-aurum-border space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h4 className="font-bold text-sm text-aurum-text">2. Level-1 KYC Verification</h4>
+              <p className="text-xs text-aurum-text-muted leading-relaxed">
+                In compliance with Bangladesh Financial Intelligence Unit (BFIU) guidelines, identity verification with your Smart NID or Passport is mandatory before bullion handover.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-aurum-surface/80 border border-aurum-border space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                <Building className="w-5 h-5" />
+              </div>
+              <h4 className="font-bold text-sm text-aurum-text">3. Vault Pickup or Armored Courier</h4>
+              <p className="text-xs text-aurum-text-muted leading-relaxed">
+                Collect directly from our authorized Vault Custody Desk in Gulshan Financial District, Dhaka, or request insured armored courier delivery across Bangladesh. Flat minting fee of ৳1,000 applies.
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* =========================================================================

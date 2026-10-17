@@ -51,6 +51,7 @@ import {
   CreditCard,
   Target,
   Shield,
+  Building,
   Printer,
   X,
 } from 'lucide-react';
@@ -76,10 +77,47 @@ export default function DashboardPage() {
   const [orderFilter, setOrderFilter] = useState<'ALL' | 'BUY' | 'SELL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Physical Delivery Modal State
+  // Physical Delivery State
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState<'PICKUP' | 'COURIER'>('PICKUP');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [deliveryPhone, setDeliveryPhone] = useState('');
+  const [isSubmittingRedemption, setIsSubmittingRedemption] = useState(false);
+  const [redemptionSuccessId, setRedemptionSuccessId] = useState<string | null>(null);
+  const [redemptionError, setRedemptionError] = useState<string | null>(null);
+
   // Receipt Modal State
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+
+  const handleSubmitRedemption = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingRedemption(true);
+    setRedemptionError(null);
+    try {
+      const res = await apiRequest<{ success: boolean; data: any }>('/support/tickets', {
+        method: 'POST',
+        body: JSON.stringify({
+          subject: 'Physical Gold Bullion Redemption Request (1 Bhori / 11.664g)',
+          category: 'GOLD_DELIVERY',
+          priority: 'HIGH',
+          message: `Physical Bullion Redemption Request.
+Method: ${deliveryMethod === 'PICKUP' ? 'Vault Custody Desk Pickup (Gulshan Financial District, Dhaka)' : 'Insured Armored Courier Delivery Nationwide'}
+Address: ${deliveryAddress.trim() || 'Vault Pickup in Person (Gulshan-1, Dhaka)'}
+Contact Mobile: ${deliveryPhone.trim() || user?.phone || 'On file'}
+Weight: 11.664g (1 Bhori) 24K Assayed Hallmark Bar
+Minting Fee Consent: ৳1,000 flat certified assay hallmark fee agreed.`,
+        }),
+      });
+
+      if (res.success && res.data) {
+        setRedemptionSuccessId(res.data.ticketId);
+      }
+    } catch (err: any) {
+      setRedemptionError(err.message || 'Failed to file redemption request');
+    } finally {
+      setIsSubmittingRedemption(false);
+    }
+  };
 
   const handleDownloadStatement = () => {
     if (!orders || orders.length === 0) return;
@@ -349,6 +387,17 @@ export default function DashboardPage() {
                 <PieChart className="w-3.5 h-3.5 text-[#D4AF63]" />
                 <span>Portfolio</span>
               </Link>
+              <button
+                onClick={() => {
+                  setRedemptionSuccessId(null);
+                  setRedemptionError(null);
+                  setDeliveryModalOpen(true);
+                }}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#111A2F] hover:bg-[#16223D] border border-[#D4AF63]/30 text-[#D4AF63] text-xs font-bold transition-all"
+              >
+                <Truck className="w-3.5 h-3.5" />
+                <span>Redemption</span>
+              </button>
             </div>
           </div>
 
@@ -842,29 +891,155 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {totalGrams < 11.664 ? (
-              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs space-y-2">
-                <p className="font-bold">{t('dashboard.minThresholdTitle')}</p>
-                <p>
-                  {t('dashboard.minThresholdNotice')}
+            {redemptionSuccessId ? (
+              <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-center space-y-3">
+                <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
+                <h4 className="font-bold text-sm text-aurum-text">
+                  {language === 'bn' ? 'ডেলিভারি আবেদন সফলভাবে নথিভুক্ত হয়েছে' : 'Redemption Request Confirmed'}
+                </h4>
+                <p className="text-xs font-mono text-aurum-gold font-bold">
+                  Reference: {redemptionSuccessId}
                 </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-xs text-aurum-text-muted">
-                  {t('dashboard.deliveryLogistics')}
+                <p className="text-xs text-aurum-text-muted leading-relaxed">
+                  {language === 'bn'
+                    ? 'আপনার আবেদনটি ভল্ট কাস্টডি ডেস্কে পাঠানো হয়েছে। আমাদের ট্রাস্ট অফিসার পরবর্তী ২৪ ঘণ্টার মধ্যে আপনার সাথে যোগাযোগ করবেন।'
+                    : 'Your redemption order has been logged in the vault queue. An accredited custody officer will contact you within 24 business hours to finalize collection.'}
                 </p>
                 <Button
-                  variant="primary"
-                  className="w-full"
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2"
                   onClick={() => {
-                    alert(language === 'bn' ? 'ডেলিভারি আবেদন ভল্ট ডেস্কে গৃহীত হয়েছে।' : 'Delivery request filed with Vault Custody Desk. An officer will contact you.');
                     setDeliveryModalOpen(false);
+                    setRedemptionSuccessId(null);
                   }}
                 >
-                  {t('dashboard.confirmRedemption')}
+                  {language === 'bn' ? 'ঠিক আছে' : 'Done'}
                 </Button>
               </div>
+            ) : totalGrams < 11.664 ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs space-y-2">
+                  <p className="font-bold">{t('dashboard.minThresholdTitle')}</p>
+                  <p>{t('dashboard.minThresholdNotice')}</p>
+                  <div className="pt-2">
+                    <div className="w-full h-2 rounded-full bg-amber-950 overflow-hidden">
+                      <div
+                        className="h-full bg-aurum-gold transition-all"
+                        style={{ width: `${Math.min(100, (totalGrams / 11.664) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-mono text-aurum-text-dim block mt-1">
+                      {totalGrams.toFixed(3)}g / 11.664g ({Math.round((totalGrams / 11.664) * 100)}% accumulated)
+                    </span>
+                  </div>
+                </div>
+
+                <Link
+                  href="/trade?type=BUY"
+                  onClick={() => setDeliveryModalOpen(false)}
+                  className="w-full py-3 rounded-xl bg-aurum-gold hover:brightness-110 text-aurum-midnight font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-gold-glow"
+                >
+                  <span>{language === 'bn' ? 'স্বর্ণ ক্রয় করে লক্ষ্য পূরণ করুন' : 'Purchase Gold to Reach 1 Bhori'}</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              </div>
+            ) : !isKycApproved ? (
+              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs space-y-3">
+                <div className="flex items-center space-x-2 font-bold text-rose-400">
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>Government KYC Required</span>
+                </div>
+                <p className="leading-relaxed">
+                  Under Bangladesh Financial Intelligence Unit (BFIU) guidelines, physical bullion handover requires approved identity verification (Smart NID or Passport).
+                </p>
+                <Link
+                  href="/kyc"
+                  onClick={() => setDeliveryModalOpen(false)}
+                  className="w-full py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all border border-rose-500/40"
+                >
+                  <span>Complete KYC Verification Now</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitRedemption} className="space-y-4">
+                {redemptionError && (
+                  <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+                    {redemptionError}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase font-mono tracking-wider text-aurum-text-dim block">
+                    Preferred Collection Method
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryMethod('PICKUP')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        deliveryMethod === 'PICKUP'
+                          ? 'bg-aurum-gold/15 border-aurum-gold text-aurum-gold font-bold'
+                          : 'bg-aurum-surface border-aurum-border text-aurum-text-muted'
+                      }`}
+                    >
+                      <Building className="w-4 h-4 mb-1" />
+                      <span>Vault Desk Pickup</span>
+                      <span className="text-[10px] block opacity-70">Gulshan-1, Dhaka</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryMethod('COURIER')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        deliveryMethod === 'COURIER'
+                          ? 'bg-aurum-gold/15 border-aurum-gold text-aurum-gold font-bold'
+                          : 'bg-aurum-surface border-aurum-border text-aurum-text-muted'
+                      }`}
+                    >
+                      <Truck className="w-4 h-4 mb-1" />
+                      <span>Armored Courier</span>
+                      <span className="text-[10px] block opacity-70">Insured Delivery</span>
+                    </button>
+                  </div>
+                </div>
+
+                {deliveryMethod === 'COURIER' && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-aurum-text-muted">
+                      Delivery Address in Bangladesh
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Holding / Street / Area / City"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-aurum-surface border border-aurum-border text-xs text-aurum-text focus:outline-none focus:border-aurum-gold"
+                    />
+                  </div>
+                )}
+
+                <div className="p-3 rounded-xl bg-aurum-surface border border-aurum-border text-[11px] text-aurum-text-dim space-y-1">
+                  <div className="flex justify-between">
+                    <span>Bullion Spec:</span>
+                    <span className="font-bold text-aurum-text">1 Bhori (11.664g) 24K 999.9 Fine</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Assay & Minting Fee:</span>
+                    <span className="font-bold text-aurum-gold">৳1,000 / Bar</span>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="w-full"
+                  isLoading={isSubmittingRedemption}
+                >
+                  Confirm Physical Redemption Order
+                </Button>
+              </form>
             )}
 
             <Button

@@ -145,25 +145,50 @@ export default function HeroRealPriceWidget() {
             </div>
           </div>
 
-          {/* Bhori Conversion Pill */}
-          <div className="p-3 rounded-2xl bg-aurum-surface/60 border border-aurum-border/80 flex items-center justify-between text-xs">
-            <span className="text-aurum-text-muted">
-              Official Bhori Rate (11.664g):
-            </span>
-            <span className="font-mono font-bold text-aurum-text">
-              {formatBDT(currentRate.buyPricePerBhoriBdt)}
-            </span>
+          {/* Bhori Conversion & Customer Savings Breakdown */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className="p-3 rounded-2xl bg-aurum-surface/80 border border-aurum-border/80 flex flex-col justify-between">
+              <span className="text-[10px] uppercase font-mono text-aurum-text-dim">
+                Official Bhori Rate (11.664g):
+              </span>
+              <span className="font-mono font-bold text-aurum-text text-sm mt-0.5">
+                {formatBDT(currentRate.buyPricePerBhoriBdt)}
+              </span>
+              <span className="text-[10px] text-aurum-text-muted mt-0.5">
+                BAJUS Benchmark Base
+              </span>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 flex flex-col justify-between">
+              <span className="text-[10px] uppercase font-mono text-emerald-400 font-bold flex items-center justify-between">
+                <span>Direct Savers&apos; Gain</span>
+                <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-[9px]">0% Making</span>
+              </span>
+              <span className="font-mono font-bold text-emerald-300 text-sm mt-0.5">
+                Save ~{formatBDT(Math.round(currentRate.buyPricePerBhoriBdt * 0.055))}/bhori
+              </span>
+              <span className="text-[10px] text-emerald-400/80 mt-0.5">
+                Vs 5-8% retail jewellery wastage
+              </span>
+            </div>
           </div>
 
-          {/* Action Row */}
-          <div className="flex items-center justify-between pt-1 text-xs">
-            <span className="text-aurum-text-dim font-mono text-[11px]">
-              {lastRefreshed ? `Refreshed at ${lastRefreshed}` : 'Synchronized'}
-            </span>
+          {/* Action Row & Live Timestamp */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 border-t border-aurum-border/60 gap-2 text-xs">
+            <div className="flex items-center space-x-1.5 text-aurum-text-dim font-mono text-[11px]">
+              <Clock className="w-3 h-3 text-aurum-gold" />
+              <span>
+                {currentRate.effectiveAt
+                  ? `BAJUS Sync: ${new Date(currentRate.effectiveAt).toLocaleTimeString('en-BD', { hour: '2-digit', minute: '2-digit' })}`
+                  : lastRefreshed
+                  ? `Refreshed at ${lastRefreshed}`
+                  : 'Synchronized'}
+              </span>
+            </div>
 
             <Link
               href="/trade"
-              className="inline-flex items-center space-x-1 font-bold text-aurum-gold hover:text-aurum-gold-light transition-colors group"
+              className="inline-flex items-center space-x-1 font-bold text-aurum-gold hover:text-aurum-gold-light transition-colors group self-start sm:self-auto"
             >
               <span>Instant Buy / Sell Desk</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
