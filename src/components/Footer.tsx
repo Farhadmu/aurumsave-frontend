@@ -3,10 +3,16 @@
 import React from 'react';
 import { ShieldCheck, Lock, Award, HeartHandshake, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../lib/language-context';
+import { usePathname } from 'next/navigation';
 import { Badge } from './ui/Badge';
 
 export default function Footer() {
   const { t } = useLanguage();
+  const pathname = usePathname();
+
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/staff')) {
+    return null;
+  }
 
   return (
     <footer className="bg-aurum-card border-t border-aurum-border text-aurum-text-muted text-sm pt-16 pb-12 transition-colors duration-300">

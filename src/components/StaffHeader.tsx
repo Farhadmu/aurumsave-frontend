@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth-context';
 import { useLanguage } from '../lib/language-context';
 import { Role } from '../shared';
 import { Badge } from './ui/Badge';
+import MobileNavigationGrid from './navigation/MobileNavigationGrid';
 import {
   Shield,
   Users,
@@ -120,6 +121,8 @@ export default function StaffHeader({
             );
           })}
       </div>
+      {/* Mobile Navigation Grid (Exclusively for screens < 768px, no bottom bar/drawer) */}
+      <MobileNavigationGrid className="pt-2 block md:hidden" />
     </div>
   );
 }

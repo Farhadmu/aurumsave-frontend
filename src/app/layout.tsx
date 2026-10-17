@@ -36,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark scroll-smooth" suppressHydrationWarning>
-      <body className="bg-aurum-midnight text-aurum-text antialiased selection:bg-aurum-gold selection:text-aurum-midnight flex flex-col min-h-screen pb-16 md:pb-0">
+      <body className="bg-aurum-midnight text-aurum-text antialiased selection:bg-aurum-gold selection:text-aurum-midnight flex flex-col min-h-screen">
         <LanguageProvider>
           <ThemeProvider>
             <AuthProvider>

@@ -24,6 +24,12 @@ export default function ResponsiveBottomNav() {
 
   const roleConfig = getRoleNavConfig(user?.role);
 
+  // Mobile navigation requirement: No bottom navigation bar on dashboard/staff or authenticated views;
+  // All navigation options appear directly as icon tiles on the main screen.
+  if (user || pathname.startsWith('/dashboard') || pathname.startsWith('/staff')) {
+    return null;
+  }
+
   // Fallback nav items for unauthenticated public visitors
   const publicNavItems = [
     { id: 'home', labelEn: 'Home', labelBn: 'হোম', href: '/', icon: Home, exact: true },

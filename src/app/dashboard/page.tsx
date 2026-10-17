@@ -13,6 +13,8 @@ import {
   CONVERSIONS,
 } from '../../shared';
 import { formatBDT, formatGoldWeight, formatDateTime } from '../../lib/utils';
+import Link from 'next/link';
+import MobileNavigationGrid from '../../components/navigation/MobileNavigationGrid';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
@@ -27,6 +29,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import {
+  PieChart,
   ShieldAlert,
   ShieldCheck,
   TrendingUp,
@@ -238,60 +241,138 @@ export default function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8 sm:space-y-10">
       {/* =========================================================================
-          GREETING & KYC VERIFICATION CALLOUT
+          ACCOUNT SUMMARY HERO BANNER & MOBILE NAVIGATION GRID (Infographic Design)
          ========================================================================= */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-2 mb-1">
-            <span className="text-xs uppercase font-mono tracking-wider text-aurum-text-dim font-bold">
-              {t('dashboard.deskLabel')}
-            </span>
-            <Badge variant="gold" size="sm">
-              {t('dashboard.level1Verified')}
-            </Badge>
+      <div className="rounded-3xl bg-[#0B1220] border border-[#D4AF63]/30 p-5 sm:p-7 shadow-[0_16px_40px_-15px_rgba(0,0,0,0.6)] relative overflow-hidden space-y-6">
+        {/* Subtle background glow */}
+        <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#D4AF63]/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Welcome Greeting */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="text-xs uppercase font-mono tracking-wider text-[#94A3B8] font-bold">
+                {t('dashboard.deskLabel')}
+              </span>
+              <Badge variant="gold" size="sm">
+                {isKycApproved ? t('dashboard.level1Verified') : 'Tier-1 KYC Active'}
+              </Badge>
+            </div>
+            <h1 className="font-serif-luxury text-2xl sm:text-4xl font-bold text-[#F8F6F0]">
+              {language === 'bn' ? 'শুভ দিন' : 'Good Morning'},{' '}
+              <span className="gold-gradient-text">{user?.fullName || 'Private Client'}</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-[#94A3B8] mt-0.5">
+              {language === 'bn'
+                ? 'স্বর্ণে গড়ে তুলুন আপনার ভবিষ্যৎ। নিরাপদ, স্বচ্ছ, সার্বভৌম।'
+                : 'Build your future with gold. Safe. Transparent. Yours.'}
+            </p>
           </div>
-          <h1 className="font-serif-luxury text-3xl sm:text-4xl font-bold text-aurum-text">
-            {t('dashboard.welcome')} <span className="gold-gradient-text">{user?.fullName}</span>
-          </h1>
+
+          <div className="hidden sm:flex items-center space-x-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => window.print()}
+              leftIcon={<Download className="w-4 h-4 text-aurum-gold" />}
+            >
+              {t('vault.downloadPassport')}
+            </Button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <a href="/goals">
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={<Target className="w-4 h-4 text-aurum-gold" />}
-            >
-              {t('nav.goals')}
-            </Button>
-          </a>
-          <a href="/security">
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={<Shield className="w-4 h-4 text-emerald-400" />}
-            >
-              {t('nav.security')}
-            </Button>
-          </a>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => window.print()}
-            leftIcon={<Download className="w-4 h-4 text-aurum-gold" />}
-          >
-            {t('vault.downloadPassport')}
-          </Button>
-          <a href="/trade">
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={<Coins className="w-4 h-4" />}
-            >
-              {t('nav.trade')}
-            </Button>
-          </a>
+        {/* Real Account Data Card & Gold Visual */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center p-5 rounded-2xl bg-[#070C16]/90 border border-[#D4AF63]/20">
+          {/* Metrics */}
+          <div className="md:col-span-8 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#94A3B8] block">
+                  Total Gold Holdings
+                </span>
+                <div className="text-2xl sm:text-3xl font-bold font-mono text-[#F8F6F0] mt-0.5">
+                  {formatLocalizedGold(totalGrams)}
+                </div>
+                <span className="text-xs font-mono text-[#D4AF63] font-semibold block mt-0.5">
+                  ≈ {toLocalizedDigits(totalBhori)} {language === 'bn' ? 'ভরি' : 'Bhori'}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#94A3B8] block">
+                  Estimated Value
+                </span>
+                <div className="text-2xl sm:text-3xl font-bold font-mono text-[#D4AF63] mt-0.5">
+                  {formatLocalizedBDT(totalValuation)}
+                </div>
+                <div className="text-xs font-mono text-emerald-400 font-semibold mt-0.5 flex items-center space-x-1">
+                  <span>+{formatLocalizedBDT(portfolio?.unrealizedGainLossBdt || 0)}</span>
+                  <span>({toLocalizedDigits(portfolio?.unrealizedGainLossPercentage || 0)}%)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions (Desktop Pill Buttons) */}
+            <div className="hidden sm:flex flex-wrap items-center gap-2 pt-2 border-t border-[#D4AF63]/15">
+              <Link
+                href="/trade?type=BUY"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#D4AF63]/15 hover:bg-[#D4AF63]/25 border border-[#D4AF63]/40 text-[#D4AF63] text-xs font-bold transition-all"
+              >
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>Buy Gold</span>
+              </Link>
+              <Link
+                href="/trade?type=SELL"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#111A2F] hover:bg-[#16223D] border border-[#D4AF63]/20 text-[#F8F6F0] text-xs font-semibold transition-all"
+              >
+                <Coins className="w-3.5 h-3.5 text-[#D4AF63]" />
+                <span>Sell Gold</span>
+              </Link>
+              <Link
+                href="/goals"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#111A2F] hover:bg-[#16223D] border border-[#D4AF63]/20 text-[#F8F6F0] text-xs font-semibold transition-all"
+              >
+                <Target className="w-3.5 h-3.5 text-[#D4AF63]" />
+                <span>Savings Goals</span>
+              </Link>
+              <Link
+                href="/dashboard/auto-save"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#111A2F] hover:bg-[#16223D] border border-[#D4AF63]/20 text-[#F8F6F0] text-xs font-semibold transition-all"
+              >
+                <Repeat className="w-3.5 h-3.5 text-[#D4AF63]" />
+                <span>AutoSave</span>
+              </Link>
+              <Link
+                href="/dashboard/portfolio"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#111A2F] hover:bg-[#16223D] border border-[#D4AF63]/20 text-[#94A3B8] hover:text-[#F8F6F0] text-xs font-semibold transition-all"
+              >
+                <PieChart className="w-3.5 h-3.5 text-[#D4AF63]" />
+                <span>Portfolio</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Gold Bullion 3D Visual on Right */}
+          <div className="md:col-span-4 flex items-center justify-center p-2">
+            <div className="w-36 h-24 sm:w-44 sm:h-28 rounded-2xl overflow-hidden border border-[#D4AF63]/40 shadow-gold-glow relative">
+              <img
+                src="/images/hero/bullion-macro.jpg"
+                alt="Sovereign Gold Bullion"
+                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0B1220]/80 via-transparent to-transparent flex items-end p-2">
+                <span className="text-[10px] font-mono text-[#D4AF63] font-bold">
+                  24K 999.9 Bullion
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* =========================================================================
+            MOBILE NAVIGATION GRID (< 768px): Directly on main screen
+           ========================================================================= */}
+        <MobileNavigationGrid className="pt-1" />
       </div>
 
       {/* KYC Alert if not verified */}

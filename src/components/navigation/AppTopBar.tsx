@@ -31,6 +31,11 @@ export default function AppTopBar() {
 
   const roleConfig = getRoleNavConfig(user?.role);
 
+  // On dashboard and staff routes, DashboardShell handles both the permanent desktop sidebar and header
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/staff')) {
+    return null;
+  }
+
   return (
     <>
       <header className="sticky top-0 z-40 bg-aurum-midnight/90 backdrop-blur-xl border-b border-aurum-border transition-colors duration-300">
