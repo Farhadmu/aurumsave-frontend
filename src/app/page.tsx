@@ -7,6 +7,7 @@ import HeroRealPriceWidget from '../components/HeroRealPriceWidget';
 import GoldPriceWidget from '../components/GoldPriceWidget';
 import GoldPriceChart from '../components/GoldPriceChart';
 import GoldCalculator from '../components/GoldCalculator';
+import OfficialStoreSection from '../components/commerce/OfficialStoreSection';
 import { Badge } from '../components/ui/Badge';
 import {
   ShieldCheck,
@@ -344,6 +345,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* =========================================================================
+          SECTION 2.8 — OFFICIAL MINTED BULLION STORE (GOLD KINEN INSPIRED SHOWCASE)
+         ========================================================================= */}
+      <OfficialStoreSection />
 
       {/* =========================================================================
           SECTION 3 — HOW AURUMSAVE WORKS (THE VERIFIED CUSTOMER JOURNEY)

@@ -8,27 +8,115 @@ import { StoreCheckoutModal } from '../../components/commerce/StoreCheckoutModal
 import { ShieldCheck, Award, Lock, Sparkles, Building2, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../../lib/language-context';
 
+const DEFAULT_STORE_PRODUCTS: OfficialProduct[] = [
+  {
+    productId: 'PROD-BAR-1G-24K',
+    titleEn: 'AurumSave Sovereign 1g 24K Minted Gold Bar',
+    titleBn: 'অরামসেভ ১ গ্রাম ২৪ ক্যারেট মিন্টেড গোল্ড বার',
+    slug: '1g-24k-minted-gold-bar',
+    productType: 'MINTED_BAR',
+    purity: '24K' as any,
+    weightGrams: 1.0,
+    weightMilligrams: 1000,
+    makingFeePoisha: 45000,
+    inStockQuantity: 25,
+    reservedQuantity: 0,
+    images: ['/images/hero/bullion-macro.jpg'],
+    certifier: 'BSTI & PAMP Assay Certified',
+    standard: 'LBMA Good Delivery Standard',
+    isActive: true,
+    ratePerGramBdt: 12450,
+    goldValueBdt: 12450,
+    makingFeeBdt: 450,
+    calculatedPriceBdt: 12900,
+    calculatedPricePoisha: 1290000,
+  },
+  {
+    productId: 'PROD-BAR-5G-24K',
+    titleEn: 'AurumSave Sovereign 5g 24K Minted Gold Bar',
+    titleBn: 'অরামসেভ ৫ গ্রাম ২৪ ক্যারেট মিন্টেড গোল্ড বার',
+    slug: '5g-24k-minted-gold-bar',
+    productType: 'MINTED_BAR',
+    purity: '24K' as any,
+    weightGrams: 5.0,
+    weightMilligrams: 5000,
+    makingFeePoisha: 125000,
+    inStockQuantity: 15,
+    reservedQuantity: 0,
+    images: ['/images/hero/vault-cinematic.jpg'],
+    certifier: 'BSTI & PAMP Assay Certified',
+    standard: 'LBMA Good Delivery Standard',
+    isActive: true,
+    ratePerGramBdt: 12450,
+    goldValueBdt: 62250,
+    makingFeeBdt: 1250,
+    calculatedPriceBdt: 63500,
+    calculatedPricePoisha: 6350000,
+  },
+  {
+    productId: 'PROD-BAR-10G-24K',
+    titleEn: 'AurumSave Sovereign 10g 24K Minted Gold Bar',
+    titleBn: 'অরামসেভ ১০ গ্রাম ২৪ ক্যারেট মিন্টেড গোল্ড বার',
+    slug: '10g-24k-minted-gold-bar',
+    productType: 'MINTED_BAR',
+    purity: '24K' as any,
+    weightGrams: 10.0,
+    weightMilligrams: 10000,
+    makingFeePoisha: 200000,
+    inStockQuantity: 10,
+    reservedQuantity: 0,
+    images: ['/images/hero/texture-cinematic.jpg'],
+    certifier: 'BSTI & Valcambi Assay Certified',
+    standard: 'LBMA Good Delivery Standard',
+    isActive: true,
+    ratePerGramBdt: 12450,
+    goldValueBdt: 124500,
+    makingFeeBdt: 2000,
+    calculatedPriceBdt: 126500,
+    calculatedPricePoisha: 12650000,
+  },
+  {
+    productId: 'PROD-BAR-1BHORI-22K',
+    titleEn: 'AurumSave Heritage 1 Bhori (11.664g) 22K Investment Bar',
+    titleBn: 'অরামসেভ হেরিটেজ ১ ভরি (১১.৬৬৪ গ্রাম) ২২ ক্যারেট গোল্ড বার',
+    slug: '1-bhori-22k-investment-bar',
+    productType: 'CAST_BAR',
+    purity: '22K' as any,
+    weightGrams: 11.664,
+    weightMilligrams: 11664,
+    makingFeePoisha: 250000,
+    inStockQuantity: 8,
+    reservedQuantity: 0,
+    images: ['/images/hero/bullion-macro.jpg'],
+    certifier: 'BSTI Hallmark 916 Assayed',
+    standard: 'Bangladesh Jewellery Standard',
+    isActive: true,
+    ratePerGramBdt: 11850,
+    goldValueBdt: 138218,
+    makingFeeBdt: 2500,
+    calculatedPriceBdt: 140718,
+    calculatedPricePoisha: 14071800,
+  },
+];
+
 export default function OfficialGoldStorePage() {
   const { t, language } = useLanguage();
-  const [products, setProducts] = useState<OfficialProduct[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [products, setProducts] = useState<OfficialProduct[]>(DEFAULT_STORE_PRODUCTS);
+  const [loading, setLoading] = useState<boolean>(false);
   const [selectedProduct, setSelectedProduct] = useState<OfficialProduct | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
 
   const fetchProducts = async () => {
-    setLoading(true);
     try {
       const res = await apiRequest<{ success: boolean; data: OfficialProduct[] }>(
         '/commerce/store/products',
       );
-      if (res?.data) {
+      if (res?.data && res.data.length > 0) {
         setProducts(res.data);
       }
     } catch (err) {
       console.error('Failed to load store products', err);
-    } finally {
-      setLoading(false);
     }
   };
 
