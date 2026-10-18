@@ -10,6 +10,7 @@ import {
   KycStatus,
   OrderStatus,
   PurityGrade,
+  Role,
   CONVERSIONS,
 } from '../../shared';
 import { formatBDT, formatGoldWeight, formatDateTime } from '../../lib/utils';
@@ -225,6 +226,13 @@ Minting Fee Consent: ৳1,000 flat certified assay hallmark fee agreed.`,
       return;
     }
     if (user) {
+      if (
+        user.role === Role.CUSTOMER &&
+        (user.kycStatus === KycStatus.NOT_SUBMITTED || !user.kycStatus)
+      ) {
+        router.push('/kyc?mandatory=true');
+        return;
+      }
       loadDashboardData();
     }
   }, [user, authLoading, router]);

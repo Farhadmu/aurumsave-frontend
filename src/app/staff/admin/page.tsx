@@ -47,6 +47,17 @@ import {
   Layers,
   ArrowRight,
   ShoppingBag,
+  Eye,
+  X,
+  ExternalLink,
+  MapPin,
+  User as UserIcon,
+  Phone,
+  Mail,
+  Calendar,
+  Briefcase,
+  HeartHandshake,
+  Fingerprint,
 } from 'lucide-react';
 import { CommerceAdminControl } from '../../../components/commerce/CommerceAdminControl';
 
@@ -87,6 +98,13 @@ export default function SuperAdminControlCenter() {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('');
   const [cmsFilter, setCmsFilter] = useState<string>('');
+
+  // User NID Dossier modal state
+  const [selectedDossierUser, setSelectedDossierUser] = useState<any>(null);
+  const [dossierData, setDossierData] = useState<any>(null);
+  const [isDossierLoading, setIsDossierLoading] = useState(false);
+  const [showDossierModal, setShowDossierModal] = useState(false);
+  const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
 
   // Modals / Form states
   const [showSupplierModal, setShowSupplierModal] = useState(false);
@@ -282,6 +300,54 @@ export default function SuperAdminControlCenter() {
       );
     } catch (err: any) {
       alert(err.message || 'Role update failed');
+    }
+  };
+
+  const handleViewUserKycDossier = async (u: any) => {
+    setSelectedDossierUser(u);
+    setShowDossierModal(true);
+    setIsDossierLoading(true);
+    setDossierData(null);
+    try {
+      const res = await apiRequest<{ success: boolean; data: any }>(`/compliance/kyc/user/${u._id}`);
+      if (res && res.data) {
+        setDossierData(res.data);
+      }
+    } catch (err: any) {
+      console.error('Failed to load user KYC dossier:', err);
+      alert(err.message || 'Failed to fetch user NID registration dossier');
+    } finally {
+      setIsDossierLoading(false);
+    }
+  };
+
+  const handleQuickReviewKyc = async (applicationId: string, decision: 'APPROVED' | 'REJECTED') => {
+    const notes = window.prompt(
+      `Enter compliance review notes for ${decision}:`,
+      decision === 'APPROVED' ? 'Smart NID details and biometric selfie verified.' : 'NID details illegible or unverified.',
+    );
+    if (notes === null) return;
+
+    setIsReviewSubmitting(true);
+    try {
+      await apiRequest(`/compliance/kyc/${applicationId}/review`, {
+        method: 'POST',
+        body: JSON.stringify({
+          decision,
+          reviewNotes: notes || (decision === 'APPROVED' ? 'Approved by Admin' : 'Rejected by Admin'),
+          rejectionReason: decision === 'REJECTED' ? notes : undefined,
+        }),
+      });
+      alert(`Customer KYC successfully ${decision === 'APPROVED' ? 'Approved' : 'Rejected'}.`);
+      if (selectedDossierUser) {
+        const res = await apiRequest<{ success: boolean; data: any }>(`/compliance/kyc/user/${selectedDossierUser._id}`);
+        if (res && res.data) setDossierData(res.data);
+      }
+      loadAllData(true);
+    } catch (err: any) {
+      alert(err.message || 'Review action failed');
+    } finally {
+      setIsReviewSubmitting(false);
     }
   };
 
@@ -1042,7 +1108,15 @@ export default function SuperAdminControlCenter() {
                           {u.isActive !== false ? 'Active' : 'Suspended'}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right space-x-2">
+                      <td className="py-3.5 px-4 text-right space-x-2 whitespace-nowrap">
+                        <button
+                          onClick={() => handleViewUserKycDossier(u)}
+                          className="px-2.5 py-1 rounded-lg border border-aurum-gold/40 text-aurum-gold hover:bg-aurum-gold/15 text-[11px] font-semibold transition-all inline-flex items-center space-x-1"
+                          title="View complete Bangladesh Smart NID dossier and photos"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>View NID</span>
+                        </button>
                         <button
                           onClick={() => handleFreezeUser(u._id, Boolean(u.isAccountFrozen))}
                           className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all ${
@@ -1923,6 +1997,436 @@ export default function SuperAdminControlCenter() {
               </Button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: CUSTOMER SMART NID REGISTRATION DOSSIER */}
+      {/* ========================================================= */}
+      {showDossierModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+          <div className="w-full max-w-4xl rounded-3xl bg-aurum-card border border-aurum-gold/40 shadow-2xl relative my-auto max-h-[92vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-aurum-border bg-aurum-surface/50">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-aurum-gold/15 border border-aurum-gold/30 flex items-center justify-center text-aurum-gold">
+                  <Fingerprint className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="font-serif-luxury text-lg sm:text-xl font-bold text-aurum-text">
+                      Customer NID Verification Dossier
+                    </h3>
+                    <Badge
+                      variant={
+                        selectedDossierUser?.kycStatus === 'APPROVED'
+                          ? 'emerald'
+                          : selectedDossierUser?.kycStatus === 'PENDING_REVIEW'
+                          ? 'amber'
+                          : 'slate'
+                      }
+                      size="sm"
+                    >
+                      {selectedDossierUser?.kycStatus || 'NOT_SUBMITTED'}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-aurum-text-muted mt-0.5">
+                    Bangladesh Smart NID Registration details for {selectedDossierUser?.fullName} ({selectedDossierUser?.email})
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowDossierModal(false)}
+                className="p-2 rounded-xl bg-aurum-surface text-aurum-text-muted hover:text-aurum-text border border-aurum-border transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+              {isDossierLoading ? (
+                <div className="space-y-4 py-8">
+                  <Skeleton className="h-20 w-full rounded-2xl" />
+                  <Skeleton className="h-40 w-full rounded-2xl" />
+                  <Skeleton className="h-40 w-full rounded-2xl" />
+                </div>
+              ) : !dossierData?.latestApplication && !dossierData?.profile?.fatherName ? (
+                <EmptyState
+                  icon={<Fingerprint className="w-10 h-10 text-aurum-text-dim" />}
+                  title="No NID Registration Submitted Yet"
+                  description="This customer has not submitted their Bangladesh Smart NID form yet. Their account will require mandatory NID completion before dashboard access is unlocked."
+                />
+              ) : (
+                <>
+                  {/* Quick User Summary Bar */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-aurum-surface border border-aurum-border">
+                    <div>
+                      <span className="text-aurum-text-dim block">Customer Name</span>
+                      <span className="font-bold text-aurum-text mt-0.5 block truncate">
+                        {dossierData.user?.fullName || selectedDossierUser?.fullName}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-aurum-text-dim block">Email</span>
+                      <span className="font-mono text-aurum-text mt-0.5 block truncate">
+                        {dossierData.user?.email || selectedDossierUser?.email}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-aurum-text-dim block">Phone / Mobile</span>
+                      <span className="font-mono text-aurum-gold font-bold mt-0.5 block">
+                        {dossierData.user?.phone || 'N/A'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-aurum-text-dim block">Account State</span>
+                      <span className="font-semibold text-emerald-400 mt-0.5 block">
+                        {dossierData.user?.isAccountFrozen ? 'Frozen' : 'Active (Normal)'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Section 1: NID Bio-Data */}
+                  <div className="rounded-2xl border border-aurum-border bg-aurum-card p-4 space-y-3">
+                    <div className="flex items-center space-x-2 text-aurum-gold font-bold">
+                      <UserIcon className="w-4 h-4" />
+                      <span className="font-serif-luxury text-sm">১. জাতীয় পরিচয়পত্র বায়োডাটা (NID Bio-Data)</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div>
+                        <span className="text-aurum-text-dim block">Legal Name (as per NID):</span>
+                        <span className="font-bold text-aurum-text text-sm mt-0.5 block">
+                          {dossierData.latestApplication?.fullName || dossierData.user?.fullName || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-aurum-text-dim block">Smart NID Number:</span>
+                        <span className="font-mono font-bold text-aurum-gold text-sm mt-0.5 block">
+                          {dossierData.latestApplication?.documentNumber || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-aurum-text-dim block">Date of Birth:</span>
+                        <span className="font-mono text-aurum-text mt-0.5 block">
+                          {dossierData.latestApplication?.dateOfBirth || dossierData.profile?.dateOfBirth || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-aurum-text-dim block">Father's Name (পিতার নাম):</span>
+                        <span className="text-aurum-text font-semibold mt-0.5 block">
+                          {dossierData.latestApplication?.fatherName || dossierData.profile?.fatherName || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-aurum-text-dim block">Mother's Name (মাতার নাম):</span>
+                        <span className="text-aurum-text font-semibold mt-0.5 block">
+                          {dossierData.latestApplication?.motherName || dossierData.profile?.motherName || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-aurum-text-dim block">Occupation (পেশা):</span>
+                        <span className="text-aurum-text font-semibold mt-0.5 block">
+                          {dossierData.latestApplication?.occupation || dossierData.profile?.occupation || 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 2 & 3: Addresses */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Present Address */}
+                    <div className="rounded-2xl border border-aurum-border bg-aurum-card p-4 space-y-3">
+                      <div className="flex items-center space-x-2 text-aurum-gold font-bold">
+                        <MapPin className="w-4 h-4" />
+                        <span className="font-serif-luxury text-sm">২. বর্তমান ঠিকানা (Present Address)</span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between border-b border-aurum-border/40 pb-1">
+                          <span className="text-aurum-text-dim">Division (বিভাগ):</span>
+                          <span className="font-semibold text-aurum-text">
+                            {dossierData.latestApplication?.presentAddress?.division || dossierData.profile?.presentAddress?.division || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-aurum-border/40 pb-1">
+                          <span className="text-aurum-text-dim">District (জেলা):</span>
+                          <span className="font-semibold text-aurum-text">
+                            {dossierData.latestApplication?.presentAddress?.district || dossierData.profile?.presentAddress?.district || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-aurum-border/40 pb-1">
+                          <span className="text-aurum-text-dim">Upazila / Thana (উপজেলা/থানা):</span>
+                          <span className="font-semibold text-aurum-text">
+                            {dossierData.latestApplication?.presentAddress?.upazila || dossierData.profile?.presentAddress?.upazila || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-aurum-border/40 pb-1">
+                          <span className="text-aurum-text-dim">Postal Code (পোস্ট কোড):</span>
+                          <span className="font-mono text-aurum-text">
+                            {dossierData.latestApplication?.presentAddress?.postalCode || dossierData.profile?.presentAddress?.postalCode || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="pt-1">
+                          <span className="text-aurum-text-dim block">Road / Village / House:</span>
+                          <span className="text-aurum-text font-medium block mt-0.5">
+                            {dossierData.latestApplication?.presentAddress?.roadVillage || dossierData.profile?.presentAddress?.roadVillage || 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Permanent Address */}
+                    <div className="rounded-2xl border border-aurum-border bg-aurum-card p-4 space-y-3">
+                      <div className="flex items-center space-x-2 text-aurum-gold font-bold">
+                        <MapPin className="w-4 h-4" />
+                        <span className="font-serif-luxury text-sm">৩. স্থায়ী ঠিকানা (Permanent Address)</span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between border-b border-aurum-border/40 pb-1">
+                          <span className="text-aurum-text-dim">Division (বিভাগ):</span>
+                          <span className="font-semibold text-aurum-text">
+                            {dossierData.latestApplication?.permanentAddress?.division || dossierData.profile?.permanentAddress?.division || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-aurum-border/40 pb-1">
+                          <span className="text-aurum-text-dim">District (জেলা):</span>
+                          <span className="font-semibold text-aurum-text">
+                            {dossierData.latestApplication?.permanentAddress?.district || dossierData.profile?.permanentAddress?.district || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-aurum-border/40 pb-1">
+                          <span className="text-aurum-text-dim">Upazila / Thana (উপজেলা/থানা):</span>
+                          <span className="font-semibold text-aurum-text">
+                            {dossierData.latestApplication?.permanentAddress?.upazila || dossierData.profile?.permanentAddress?.upazila || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-aurum-border/40 pb-1">
+                          <span className="text-aurum-text-dim">Postal Code (পোস্ট কোড):</span>
+                          <span className="font-mono text-aurum-text">
+                            {dossierData.latestApplication?.permanentAddress?.postalCode || dossierData.profile?.permanentAddress?.postalCode || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="pt-1">
+                          <span className="text-aurum-text-dim block">Road / Village / House:</span>
+                          <span className="text-aurum-text font-medium block mt-0.5">
+                            {dossierData.latestApplication?.permanentAddress?.roadVillage || dossierData.profile?.permanentAddress?.roadVillage || 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 4: Nominee Details */}
+                  <div className="rounded-2xl border border-aurum-border bg-aurum-card p-4 space-y-3">
+                    <div className="flex items-center space-x-2 text-aurum-gold font-bold">
+                      <HeartHandshake className="w-4 h-4" />
+                      <span className="font-serif-luxury text-sm">৪. নমিনি সংক্রান্ত তথ্য (Nominee Details)</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div>
+                        <span className="text-aurum-text-dim block">Nominee Full Name:</span>
+                        <span className="font-bold text-aurum-text mt-0.5 block">
+                          {dossierData.latestApplication?.nominee?.fullName || dossierData.profile?.nominee?.fullName || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-aurum-text-dim block">Relationship (সম্পর্ক):</span>
+                        <span className="text-aurum-text font-semibold mt-0.5 block">
+                          {dossierData.latestApplication?.nominee?.relationship || dossierData.profile?.nominee?.relationship || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-aurum-text-dim block">Mobile Phone:</span>
+                        <span className="font-mono text-aurum-gold font-semibold mt-0.5 block">
+                          {dossierData.latestApplication?.nominee?.mobileNumber || dossierData.profile?.nominee?.mobileNumber || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-aurum-text-dim block">Nominee NID / Birth Cert:</span>
+                        <span className="font-mono text-aurum-text mt-0.5 block">
+                          {dossierData.latestApplication?.nominee?.nidNumber || dossierData.profile?.nominee?.nidNumber || 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 5: Document Scans & Photo Verification */}
+                  <div className="rounded-2xl border border-aurum-border bg-aurum-card p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-aurum-gold font-bold">
+                        <FileText className="w-4 h-4" />
+                        <span className="font-serif-luxury text-sm">৫. সংযুক্ত ডকুমেন্ট ও ছবি (Uploaded Documents)</span>
+                      </div>
+                      <span className="text-[11px] text-aurum-text-dim">
+                        Submitted: {dossierData.latestApplication?.createdAt ? formatDateTime(dossierData.latestApplication.createdAt) : 'N/A'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                      {/* NID Front */}
+                      <div className="p-3 rounded-2xl bg-aurum-surface border border-aurum-border space-y-2">
+                        <span className="font-semibold text-aurum-text block text-[11px]">
+                          Smart NID (Front Face)
+                        </span>
+                        {dossierData.latestApplication?.frontDocumentUrl ? (
+                          <div className="space-y-2">
+                            <div className="h-32 rounded-xl bg-black/40 border border-aurum-border flex items-center justify-center overflow-hidden">
+                              <img
+                                src={dossierData.latestApplication.frontDocumentUrl}
+                                alt="NID Front"
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  // Fallback display if blob expired
+                                  (e.currentTarget as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                            <a
+                              href={dossierData.latestApplication.frontDocumentUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="w-full py-1.5 px-2 rounded-lg bg-aurum-gold/15 text-aurum-gold border border-aurum-gold/30 hover:bg-aurum-gold/25 text-center block text-[11px] font-bold"
+                            >
+                              Open Full Image
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="h-32 rounded-xl bg-aurum-midnight/50 border border-dashed border-aurum-border flex items-center justify-center text-aurum-text-dim text-[11px]">
+                            No Document Uploaded
+                          </div>
+                        )}
+                      </div>
+
+                      {/* NID Back */}
+                      <div className="p-3 rounded-2xl bg-aurum-surface border border-aurum-border space-y-2">
+                        <span className="font-semibold text-aurum-text block text-[11px]">
+                          Smart NID (Back Address)
+                        </span>
+                        {dossierData.latestApplication?.backDocumentUrl ? (
+                          <div className="space-y-2">
+                            <div className="h-32 rounded-xl bg-black/40 border border-aurum-border flex items-center justify-center overflow-hidden">
+                              <img
+                                src={dossierData.latestApplication.backDocumentUrl}
+                                alt="NID Back"
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                            <a
+                              href={dossierData.latestApplication.backDocumentUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="w-full py-1.5 px-2 rounded-lg bg-aurum-gold/15 text-aurum-gold border border-aurum-gold/30 hover:bg-aurum-gold/25 text-center block text-[11px] font-bold"
+                            >
+                              Open Full Image
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="h-32 rounded-xl bg-aurum-midnight/50 border border-dashed border-aurum-border flex items-center justify-center text-aurum-text-dim text-[11px]">
+                            No Document Uploaded
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Live Selfie */}
+                      <div className="p-3 rounded-2xl bg-aurum-surface border border-aurum-border space-y-2">
+                        <span className="font-semibold text-aurum-text block text-[11px]">
+                          Customer Live Portrait
+                        </span>
+                        {dossierData.latestApplication?.selfieUrl ? (
+                          <div className="space-y-2">
+                            <div className="h-32 rounded-xl bg-black/40 border border-aurum-border flex items-center justify-center overflow-hidden">
+                              <img
+                                src={dossierData.latestApplication.selfieUrl}
+                                alt="Live Selfie"
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                            <a
+                              href={dossierData.latestApplication.selfieUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="w-full py-1.5 px-2 rounded-lg bg-aurum-gold/15 text-aurum-gold border border-aurum-gold/30 hover:bg-aurum-gold/25 text-center block text-[11px] font-bold"
+                            >
+                              Open Full Image
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="h-32 rounded-xl bg-aurum-midnight/50 border border-dashed border-aurum-border flex items-center justify-center text-aurum-text-dim text-[11px]">
+                            No Selfie Uploaded
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer with Compliance Review Actions */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 sm:p-5 border-t border-aurum-border bg-aurum-surface/70">
+              <div className="text-[11px] text-aurum-text-muted">
+                {dossierData?.latestApplication?.status === 'APPROVED' ? (
+                  <span className="text-emerald-400 font-bold inline-flex items-center space-x-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Customer Identity Verified & Approved</span>
+                  </span>
+                ) : dossierData?.latestApplication?.status === 'REJECTED' ? (
+                  <span className="text-rose-400 font-bold inline-flex items-center space-x-1">
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>Identity Submission Rejected</span>
+                  </span>
+                ) : (
+                  <span className="text-amber-400 font-bold inline-flex items-center space-x-1">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>Awaiting Admin / Compliance Review</span>
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-2">
+                {dossierData?.latestApplication && dossierData.latestApplication.status !== 'APPROVED' && (
+                  <Button
+                    variant="gold"
+                    size="sm"
+                    disabled={isReviewSubmitting}
+                    onClick={() => handleQuickReviewKyc(dossierData.latestApplication._id, 'APPROVED')}
+                    className="flex items-center space-x-1.5"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Approve NID KYC</span>
+                  </Button>
+                )}
+
+                {dossierData?.latestApplication && dossierData.latestApplication.status !== 'REJECTED' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isReviewSubmitting}
+                    onClick={() => handleQuickReviewKyc(dossierData.latestApplication._id, 'REJECTED')}
+                    className="text-rose-400 border-rose-500/40 hover:bg-rose-500/10"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>Reject / Request Re-upload</span>
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDossierModal(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

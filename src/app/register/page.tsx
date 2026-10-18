@@ -71,7 +71,7 @@ export default function RegisterPage() {
         phone,
         role: Role.CUSTOMER,
       });
-      router.push('/dashboard');
+      router.push('/kyc?onboarding=true');
     } catch (err: any) {
       setError(err.message || 'Registration failed. An account with this email may already exist.');
     } finally {
