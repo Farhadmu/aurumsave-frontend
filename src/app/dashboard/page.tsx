@@ -15,6 +15,7 @@ import {
 import { formatBDT, formatGoldWeight, formatDateTime } from '../../lib/utils';
 import Link from 'next/link';
 import MobileNavigationGrid from '../../components/navigation/MobileNavigationGrid';
+import { MyCommerceOrders } from '../../components/commerce/MyCommerceOrders';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
@@ -845,6 +846,11 @@ Minting Fee Consent: ৳1,000 flat certified assay hallmark fee agreed.`,
             </table>
           </div>
         )}
+      </div>
+
+      {/* Physical Bullion & Marketplace Orders */}
+      <div className="mt-8">
+        <MyCommerceOrders />
       </div>
 
       {/* =========================================================================

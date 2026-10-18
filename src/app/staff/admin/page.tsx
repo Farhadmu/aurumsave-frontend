@@ -46,7 +46,9 @@ import {
   Award,
   Layers,
   ArrowRight,
+  ShoppingBag,
 } from 'lucide-react';
+import { CommerceAdminControl } from '../../../components/commerce/CommerceAdminControl';
 
 type AdminTab =
   | 'overview'
@@ -57,7 +59,8 @@ type AdminTab =
   | 'approvals'
   | 'ai'
   | 'cms'
-  | 'emergency';
+  | 'emergency'
+  | 'commerce';
 
 export default function SuperAdminControlCenter() {
   const { user, isLoading: authLoading } = useAuth();
@@ -500,6 +503,7 @@ export default function SuperAdminControlCenter() {
           { id: 'ai', label: '7. AI Advisor Studio', icon: Sparkles },
           { id: 'cms', label: '8. Bilingual CMS Studio', icon: FileText },
           { id: 'emergency', label: '9. Kill-Switches & Flags', icon: Power },
+          { id: 'commerce', label: '10. Dual Commerce & Marketplace', icon: ShoppingBag },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -1443,6 +1447,15 @@ export default function SuperAdminControlCenter() {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* TAB 10: DUAL COMMERCE & MARKETPLACE CONTROL CENTER */}
+      {/* ========================================================= */}
+      {activeTab === 'commerce' && (
+        <div className="space-y-6 animate-fadeIn">
+          <CommerceAdminControl />
         </div>
       )}
 

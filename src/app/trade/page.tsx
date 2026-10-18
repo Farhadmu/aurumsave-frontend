@@ -226,6 +226,55 @@ function TradeContent() {
         </div>
       )}
 
+      {/* Commerce Channel Switcher */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-1.5 rounded-2xl bg-aurum-card-bg/60 border border-aurum-border text-left">
+        <div className="p-3.5 rounded-xl bg-aurum-gold/15 border border-aurum-gold/40">
+          <span className="text-[10px] uppercase font-bold text-aurum-gold tracking-wider block">
+            Channel 1 (Active)
+          </span>
+          <span className="text-sm font-bold text-aurum-text">Digital Vault Gold</span>
+          <p className="text-[11px] text-aurum-text-muted mt-0.5">
+            Instant fractional trade into allocated wallet balance
+          </p>
+        </div>
+
+        <a
+          href="/store"
+          className="p-3.5 rounded-xl bg-aurum-midnight/60 border border-aurum-border/60 hover:border-aurum-gold/50 transition-colors group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold text-aurum-text-dim tracking-wider block group-hover:text-aurum-gold">
+              Channel 2
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-aurum-text-dim group-hover:text-aurum-gold" />
+          </div>
+          <span className="text-sm font-bold text-aurum-text group-hover:text-aurum-gold">
+            Official Bullion Store
+          </span>
+          <p className="text-[11px] text-aurum-text-muted mt-0.5">
+            Minted bars (1g - 1 Bhori) with district pickup
+          </p>
+        </a>
+
+        <a
+          href="/marketplace"
+          className="p-3.5 rounded-xl bg-aurum-midnight/60 border border-aurum-border/60 hover:border-aurum-gold/50 transition-colors group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold text-aurum-text-dim tracking-wider block group-hover:text-aurum-gold">
+              Channel 3
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-aurum-text-dim group-hover:text-aurum-gold" />
+          </div>
+          <span className="text-sm font-bold text-aurum-text group-hover:text-aurum-gold">
+            Peer C2C Marketplace
+          </span>
+          <p className="text-[11px] text-aurum-text-muted mt-0.5">
+            Pre-owned jewellery & instant scrap liquidation
+          </p>
+        </a>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         {/* Left Input Configuration Card */}
         <div className="md:col-span-7 space-y-6">
@@ -263,6 +312,31 @@ function TradeContent() {
                 <span>{t('trade.btnSell')}</span>
               </button>
             </div>
+
+            {/* Quick Context Sub-Links */}
+            {orderType === OrderType.BUY ? (
+              <div className="p-3 rounded-xl bg-aurum-surface/50 border border-aurum-border/60 flex items-center justify-between text-xs text-left">
+                <span className="text-aurum-text-muted">Looking for physical minted bars?</span>
+                <a
+                  href="/store"
+                  className="text-aurum-gold hover:text-aurum-gold-light font-bold flex items-center space-x-1"
+                >
+                  <span>Official Store</span>
+                  <ArrowRight className="w-3 h-3" />
+                </a>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-aurum-surface/50 border border-aurum-border/60 flex items-center justify-between text-xs text-left">
+                <span className="text-aurum-text-muted">Want to liquidate physical scrap jewellery?</span>
+                <a
+                  href="/marketplace"
+                  className="text-aurum-gold hover:text-aurum-gold-light font-bold flex items-center space-x-1"
+                >
+                  <span>Scrap Liquidation Desk</span>
+                  <ArrowRight className="w-3 h-3" />
+                </a>
+              </div>
+            )}
 
             {/* Purity Selection */}
             <div>

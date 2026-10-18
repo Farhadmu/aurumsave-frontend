@@ -21,6 +21,8 @@ import {
   Lock,
   Target,
   GraduationCap,
+  Store,
+  ShoppingBag,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -95,12 +97,20 @@ export default function Navbar() {
           </a>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-6 text-sm font-medium text-aurum-text-muted">
+          <nav className="hidden lg:flex items-center space-x-5 text-sm font-medium text-aurum-text-muted">
             <a href="/trade" className="hover:text-aurum-gold transition-colors flex items-center space-x-1.5 font-semibold text-aurum-text">
               <span>{t('nav.trade')}</span>
               <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-aurum-gold/20 text-aurum-gold font-mono">
                 LIVE
               </span>
+            </a>
+            <a href="/store" className="hover:text-aurum-gold transition-colors flex items-center space-x-1 font-semibold text-aurum-text">
+              <Store className="w-3.5 h-3.5 text-aurum-gold" />
+              <span>{language === 'bn' ? 'গোল্ড স্টোর' : 'Store'}</span>
+            </a>
+            <a href="/marketplace" className="hover:text-aurum-gold transition-colors flex items-center space-x-1 font-semibold text-aurum-text">
+              <ShoppingBag className="w-3.5 h-3.5 text-aurum-gold" />
+              <span>{language === 'bn' ? 'মার্কেটপ্লেস' : 'Marketplace'}</span>
             </a>
             <a href="/goals" className="hover:text-aurum-gold transition-colors flex items-center space-x-1">
               <Target className="w-3.5 h-3.5 text-aurum-gold" />
@@ -270,6 +280,12 @@ export default function Navbar() {
             </a>
             <a href="/trade" onClick={() => setMobileMenuOpen(false)} className="hover:text-aurum-gold">
               Trade Gold (5m Rate Lock)
+            </a>
+            <a href="/store" onClick={() => setMobileMenuOpen(false)} className="hover:text-aurum-gold text-aurum-gold font-bold">
+              ★ Official Minted Bullion Store
+            </a>
+            <a href="/marketplace" onClick={() => setMobileMenuOpen(false)} className="hover:text-aurum-gold text-aurum-gold font-bold">
+              ★ Customer Gold Marketplace
             </a>
             <a href="/#vault" onClick={() => setMobileMenuOpen(false)} className="hover:text-aurum-gold">
               Vault Custody & Insurance
