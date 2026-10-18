@@ -259,7 +259,7 @@ function KycPageContent() {
           body: fd,
         });
         documents.push({
-          docType: 'CUSTOMER_PHOTO' as any,
+          docType: KycDocumentType.CUSTOMER_PHOTO,
           storageKey: upRes.data.storageKey,
           fileName: selfieFile.name,
           fileSize: selfieFile.size,
@@ -286,7 +286,7 @@ function KycPageContent() {
             storageKey: `kyc_${userId}_back.jpg`,
           },
           {
-            docType: 'CUSTOMER_PHOTO' as any,
+            docType: KycDocumentType.CUSTOMER_PHOTO,
             fileName: `${idNumber}_selfie.jpg`,
             fileSize: 1048576,
             mimeType: 'image/jpeg',
