@@ -13,6 +13,7 @@ import {
   Check,
   ChevronRight,
   PackageCheck,
+  Headphones,
 } from 'lucide-react';
 import { formatBDT } from '../../lib/utils';
 import { CONVERSIONS, FulfillmentStatus } from '../../shared';
@@ -38,8 +39,23 @@ export interface CommerceOrder {
   assayFeePoisha: number;
   totalPoisha: number;
   paymentStatus: string;
+  paymentMethod?: string;
+  deliveryMethod?: 'HOME_DELIVERY' | 'PICKUP_POINT';
+  shippingAddress?: {
+    fullName: string;
+    phone: string;
+    alternativePhone?: string;
+    recipientNid?: string;
+    division: string;
+    district: string;
+    upazila?: string;
+    addressLine: string;
+    postalCode?: string;
+    instructions?: string;
+  };
+  trackingNumber?: string;
   fulfillmentStatus: FulfillmentStatus;
-  pickupPointId: string;
+  pickupPointId?: string;
   pickupVerificationOtp: string;
   handoverConfirmedAt?: string;
   handoverNotes?: string;
@@ -80,7 +96,7 @@ export function MyCommerceOrders() {
   if (loading) {
     return (
       <div className="p-8 rounded-3xl bg-aurum-card-bg/40 border border-aurum-border animate-pulse text-xs text-aurum-text-muted">
-        Loading physical bullion and marketplace custody orders...
+        Loading physical bullion and delivery tracking records...
       </div>
     );
   }
@@ -91,7 +107,7 @@ export function MyCommerceOrders() {
         <PackageCheck className="w-10 h-10 text-aurum-gold/40 mx-auto mb-2" />
         <h4 className="text-sm font-bold text-aurum-text">No Physical Gold Orders Yet</h4>
         <p className="text-xs text-aurum-text-muted mt-1 max-w-sm mx-auto">
-          Orders placed through the Official Store or Peer Marketplace with physical pickup desk verification will appear here.
+          Certified minted gold bars (1g to 10g) ordered through the Official Store with armored delivery will appear here with live tracking.
         </p>
         <div className="mt-4 flex items-center justify-center space-x-3">
           <a
@@ -115,9 +131,11 @@ export function MyCommerceOrders() {
     <div className="space-y-4 text-left">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-bold text-aurum-text">Physical Gold & Depository Orders</h3>
+          <h3 className="text-base font-bold text-aurum-text font-serif-luxury">
+            Physical Gold Orders & Armored Delivery Tracking
+          </h3>
           <p className="text-xs text-aurum-text-muted">
-            Track allocated bullion bars, safe escrow status, and OTP verification codes.
+            Track vaulted bullion allocation, courier dispatch, and OTP security verification.
           </p>
         </div>
         <button
@@ -128,37 +146,48 @@ export function MyCommerceOrders() {
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {orders.map((order) => {
           const item = order.items?.[0];
           const isFulfilled =
             order.fulfillmentStatus === FulfillmentStatus.HANDOVER_COMPLETED;
           const totalBdt = order.totalPoisha / CONVERSIONS.POISHA_PER_BDT;
+          const isHomeDelivery = order.deliveryMethod === 'HOME_DELIVERY';
 
           return (
             <div
               key={order.orderId}
-              className="p-5 rounded-2xl bg-aurum-card-bg/70 border border-aurum-border/80 hover:border-aurum-gold/40 transition-all space-y-4"
+              className="p-5 sm:p-6 rounded-3xl bg-aurum-card border border-aurum-border hover:border-aurum-gold/40 transition-all space-y-4 shadow-card-luxury"
             >
+              {/* Header Row */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-aurum-border/40 pb-3">
                 <div className="flex items-center space-x-2">
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-aurum-gold/15 text-aurum-gold border border-aurum-gold/30">
                     {order.commerceType === 'OFFICIAL_STORE' ? 'Official Minted Bar' : 'C2C Escrow'}
                   </span>
                   <span className="text-xs font-mono font-bold text-aurum-text">
-                    {order.orderId}
+                    #{order.orderId}
                   </span>
+                  {order.trackingNumber && (
+                    <span className="text-[10px] font-mono text-aurum-text-dim px-2 py-0.5 rounded bg-aurum-surface">
+                      {order.trackingNumber}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2">
                   <span
-                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                    className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full ${
                       isFulfilled
                         ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                         : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                     }`}
                   >
-                    {isFulfilled ? 'Handover Completed' : 'Ready for Desk Pickup'}
+                    {isFulfilled
+                      ? 'Delivered & Handover Confirmed'
+                      : isHomeDelivery
+                      ? 'In Dispatch / Armored Transit'
+                      : 'Ready for Desk Pickup'}
                   </span>
                   <span className="text-xs font-black font-mono text-aurum-gold">
                     {formatBDT(totalBdt)}
@@ -166,67 +195,141 @@ export function MyCommerceOrders() {
                 </div>
               </div>
 
-              {/* Item Specs */}
-              {item && (
-                <div className="flex justify-between items-center text-xs">
-                  <div>
-                    <h5 className="font-bold text-aurum-text">{item.title}</h5>
-                    <p className="text-aurum-text-muted text-[11px] mt-0.5">
+              {/* Item Specs & Delivery Mode Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                {item && (
+                  <div className="p-3.5 rounded-2xl bg-aurum-surface/70 border border-aurum-border space-y-1">
+                    <span className="text-[10px] text-aurum-text-dim uppercase font-bold block">
+                      Ordered Bullion Item:
+                    </span>
+                    <h5 className="font-bold text-aurum-text text-sm">{item.title}</h5>
+                    <p className="text-aurum-text-muted text-[11px]">
                       Purity: <strong className="text-aurum-gold">{item.purity}</strong> • Weight:{' '}
-                      {item.weightGrams}g • Qty: {item.quantity}
+                      <strong>{item.weightGrams}g</strong> • Qty: {item.quantity}
                     </p>
-                  </div>
-                  <div className="text-right text-[11px] text-aurum-text-dim">
-                    <span>Pickup Point ID:</span>
-                    <p className="font-mono text-aurum-text font-semibold">{order.pickupPointId}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* OTP Box / Handover Status */}
-              {!isFulfilled ? (
-                <div className="p-3.5 rounded-xl bg-gradient-to-r from-aurum-midnight via-aurum-card-bg to-aurum-midnight border border-aurum-gold/40 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div className="space-y-0.5 text-center sm:text-left">
-                    <span className="text-[10px] uppercase font-bold text-aurum-gold tracking-wider block">
-                      Handover Verification OTP
+                    <span className="text-[10px] text-emerald-400 font-mono block pt-1">
+                      Payment: {order.paymentMethod || 'bKash'} (ESCROW_HELD)
                     </span>
-                    <p className="text-[11px] text-aurum-text-dim">
-                      Present this OTP in-person to the AurumSave desk officer to release your gold.
-                    </p>
                   </div>
+                )}
 
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl font-mono font-black tracking-widest text-aurum-gold px-3 py-1 rounded-lg bg-black/40 border border-aurum-gold/30">
-                      {order.pickupVerificationOtp}
-                    </span>
-                    <button
-                      onClick={() => handleCopyOtp(order.orderId, order.pickupVerificationOtp)}
-                      className="p-2 rounded-lg bg-aurum-gold/20 hover:bg-aurum-gold/30 text-aurum-gold transition-colors"
-                      title="Copy OTP"
-                    >
-                      {copiedOrderId === order.orderId ? (
-                        <Check className="w-4 h-4 text-emerald-400" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
+                <div className="p-3.5 rounded-2xl bg-aurum-surface/70 border border-aurum-border space-y-1">
+                  <span className="text-[10px] text-aurum-text-dim uppercase font-bold block">
+                    {isHomeDelivery ? 'Armored Courier Delivery Address:' : 'Depository Handover Desk:'}
+                  </span>
+                  {isHomeDelivery && order.shippingAddress ? (
+                    <div className="space-y-0.5">
+                      <p className="font-bold text-aurum-text">
+                        {order.shippingAddress.fullName} ({order.shippingAddress.phone})
+                      </p>
+                      <p className="text-aurum-text-muted text-[11px]">
+                        {order.shippingAddress.addressLine}, {order.shippingAddress.district}, {order.shippingAddress.division}
+                      </p>
+                      {order.shippingAddress.recipientNid && (
+                        <p className="text-[10px] font-mono text-aurum-gold">
+                          Handover NID: {order.shippingAddress.recipientNid}
+                        </p>
                       )}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    <span>
-                      Gold successfully inspected, verified, and handed over at depository desk.
-                    </span>
-                  </div>
-                  {order.handoverConfirmedAt && (
-                    <span className="text-[10px] text-emerald-400/80 font-mono">
-                      {new Date(order.handoverConfirmedAt).toLocaleDateString()}
-                    </span>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="font-mono font-bold text-aurum-text">
+                        Desk ID: {order.pickupPointId || 'Central Gulshan Vault'}
+                      </p>
+                      <p className="text-aurum-text-muted text-[11px]">
+                        Present your NID and Handover OTP to the desk officer.
+                      </p>
+                    </div>
                   )}
                 </div>
-              )}
+              </div>
+
+              {/* Delivery Progress Bar Timeline */}
+              <div className="p-4 rounded-2xl bg-aurum-surface/50 border border-aurum-border/60 space-y-2">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-aurum-text-dim block">
+                  Delivery & Fulfillment Status Timeline:
+                </span>
+                <div className="grid grid-cols-4 gap-2 text-center text-[10px] pt-1">
+                  <div className="space-y-1">
+                    <div className="h-1.5 rounded-full bg-emerald-400" />
+                    <span className="font-bold text-emerald-400 block">Payment Escrow</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="h-1.5 rounded-full bg-emerald-400" />
+                    <span className="font-bold text-emerald-400 block">Vault Assay Sealed</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div
+                      className={`h-1.5 rounded-full ${
+                        isFulfilled ? 'bg-emerald-400' : 'bg-aurum-gold animate-pulse'
+                      }`}
+                    />
+                    <span className="font-bold text-aurum-gold block">
+                      {isHomeDelivery ? 'Courier Transit' : 'At Pickup Desk'}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <div
+                      className={`h-1.5 rounded-full ${
+                        isFulfilled ? 'bg-emerald-400' : 'bg-aurum-border'
+                      }`}
+                    />
+                    <span
+                      className={`font-bold block ${
+                        isFulfilled ? 'text-emerald-400' : 'text-aurum-text-dim'
+                      }`}
+                    >
+                      Handover Complete
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* OTP Box & Concierge Chat Action */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                {!isFulfilled ? (
+                  <div className="flex items-center space-x-3 w-full sm:w-auto">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-aurum-gold tracking-wider block">
+                        Handover Security OTP:
+                      </span>
+                      <p className="text-[11px] text-aurum-text-dim">
+                        Present this OTP to confirm secure delivery.
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-1.5">
+                      <span className="text-xl font-mono font-black tracking-widest text-aurum-gold px-3 py-1 rounded-xl bg-black/40 border border-aurum-gold/40">
+                        {order.pickupVerificationOtp}
+                      </span>
+                      <button
+                        onClick={() => handleCopyOtp(order.orderId, order.pickupVerificationOtp)}
+                        className="p-2 rounded-xl bg-aurum-gold/15 hover:bg-aurum-gold/25 text-aurum-gold transition-colors"
+                        title="Copy OTP"
+                      >
+                        {copiedOrderId === order.orderId ? (
+                          <Check className="w-4 h-4 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-emerald-400 font-bold flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Gold bar successfully verified and handed over.</span>
+                  </div>
+                )}
+
+                {/* Direct Concierge Support Chat Button */}
+                <a
+                  href={`/support?orderId=${order.orderId}&category=DELIVERY_TRACKING&subject=Physical Gold Order #${order.orderId} Delivery Inquiry`}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-aurum-surface border border-aurum-gold/40 hover:bg-aurum-gold/15 text-aurum-gold text-xs font-bold transition-all flex items-center justify-center space-x-1.5 shrink-0"
+                >
+                  <Headphones className="w-3.5 h-3.5 text-aurum-gold" />
+                  <span>কনসিয়ার্জ সাপোর্ট চ্যাট (Concierge Support)</span>
+                </a>
+              </div>
             </div>
           );
         })}

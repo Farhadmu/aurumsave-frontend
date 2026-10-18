@@ -18,6 +18,9 @@ import {
   Flame,
   Clock,
   ArrowRight,
+  Plus,
+  Trash2,
+  Package,
 } from 'lucide-react';
 import { formatBDT } from '../../lib/utils';
 import {
@@ -35,6 +38,23 @@ export function CommerceAdminControl() {
   const [loadingStore, setLoadingStore] = useState<boolean>(false);
   const [stockEdit, setStockEdit] = useState<{ [productId: string]: number }>({});
   const [storeSuccess, setStoreSuccess] = useState<string | null>(null);
+  const [showCreateProductModal, setShowCreateProductModal] = useState<boolean>(false);
+  const [isCreatingProduct, setIsCreatingProduct] = useState<boolean>(false);
+  const [newProduct, setNewProduct] = useState({
+    titleEn: 'AurumSave Sovereign 1g 24K Minted Gold Bar',
+    titleBn: 'অরামসেভ ১ গ্রাম ২৪ ক্যারেট মিন্টেড গোল্ড বার',
+    productType: 'MINTED_BAR',
+    purity: PurityGrade.K24,
+    weightGrams: 1.0,
+    makingFeeBdt: 450,
+    inStockQuantity: 50,
+    certifier: 'BSTI & PAMP Assay Certified',
+    standard: 'LBMA Good Delivery Standard',
+    packagingType: 'Tamper-Evident Security Assay Blister Pack',
+    descriptionEn: '99.99% pure 24K fine investment gold bar sealed in bank-grade CertiPAMP assay card with security hologram.',
+    descriptionBn: '৯৯.৯৯% খাঁটি ২৪ ক্যারেট ফাইন গোল্ড বার, সিকিউরিটি হলোগ্রাম ও সার্টিপ্যাম্প অ্যাসে প্যাক দ্বারা সুরক্ষিত।',
+    image: '/images/hero/bullion-macro.jpg',
+  });
 
   // Review Queue state
   const [reviewQueue, setReviewQueue] = useState<any[]>([]);
@@ -137,6 +157,58 @@ export function CommerceAdminControl() {
       loadStoreProducts();
     } catch (err: any) {
       alert(err.message || 'Failed to update stock');
+    }
+  };
+
+  const handleCreateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreatingProduct(true);
+    try {
+      const slug = `${newProduct.weightGrams}g-${newProduct.purity.toLowerCase()}-minted-bar-${Date.now().toString().slice(-4)}`;
+      const productId = `PROD-BAR-${newProduct.weightGrams}G-${newProduct.purity}`;
+      await apiRequest('/commerce/store/products', {
+        method: 'POST',
+        body: JSON.stringify({
+          productId,
+          titleEn: newProduct.titleEn,
+          titleBn: newProduct.titleBn,
+          slug,
+          productType: newProduct.productType,
+          purity: newProduct.purity,
+          weightGrams: Number(newProduct.weightGrams),
+          makingFeePoisha: Number(newProduct.makingFeeBdt) * 100,
+          inStockQuantity: Number(newProduct.inStockQuantity),
+          images: [newProduct.image],
+          certifier: newProduct.certifier,
+          standard: newProduct.standard,
+          packagingType: newProduct.packagingType,
+          descriptionEn: newProduct.descriptionEn,
+          descriptionBn: newProduct.descriptionBn,
+          isActive: true,
+        }),
+      });
+      setShowCreateProductModal(false);
+      setStoreSuccess(`Successfully added ${newProduct.titleEn} to Official Store!`);
+      setTimeout(() => setStoreSuccess(null), 4000);
+      loadStoreProducts();
+    } catch (err: any) {
+      alert(err.message || 'Failed to create product');
+    } finally {
+      setIsCreatingProduct(false);
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string, titleEn: string) => {
+    if (!window.confirm(`Are you sure you want to remove [${titleEn}] from the store?`)) return;
+    try {
+      await apiRequest(`/commerce/store/products/${productId}`, {
+        method: 'DELETE',
+      });
+      setStoreSuccess(`Removed ${titleEn} from Official Store`);
+      setTimeout(() => setStoreSuccess(null), 3000);
+      loadStoreProducts();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete product');
     }
   };
 
@@ -473,21 +545,34 @@ export function CommerceAdminControl() {
       {/* ========================================================
           2. OFFICIAL STORE VAULT STOCK
          ======================================================== */}
+      {/* ========================================================
+          2. OFFICIAL STORE CATALOG & PRODUCT MANAGEMENT
+         ======================================================== */}
       {activeTab === 'store' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h4 className="text-sm font-bold text-aurum-text">Company Vault Bullion Inventory</h4>
+              <h4 className="text-sm font-bold text-aurum-text">Company Vault Bullion Products & Inventory</h4>
               <p className="text-xs text-aurum-text-muted">
-                Manage stock counts for official minted bars (1g, 5g, 10g, 1 Bhori) backed by physical vault custody.
+                Admin controls for physical gold bars (1g, 2g, 2.5g, 5g, 10g, 1 Bhori) delivered directly to customer or depository desks.
               </p>
             </div>
-            <button
-              onClick={loadStoreProducts}
-              className="p-1.5 rounded-lg bg-aurum-card-bg border border-aurum-border text-aurum-text hover:text-aurum-gold"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowCreateProductModal(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-aurum-gold text-aurum-midnight hover:bg-aurum-gold-light text-xs font-bold transition-all shadow-gold-glow flex items-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Gold Product</span>
+              </button>
+              <button
+                onClick={loadStoreProducts}
+                className="p-1.5 rounded-xl bg-aurum-card-bg border border-aurum-border text-aurum-text hover:text-aurum-gold"
+                title="Refresh Store Products"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {storeSuccess && (
@@ -500,21 +585,30 @@ export function CommerceAdminControl() {
             {storeProducts.map((prod) => (
               <div
                 key={prod.productId}
-                className="p-5 rounded-2xl bg-aurum-card-bg/70 border border-aurum-border/80 space-y-3"
+                className="p-5 rounded-2xl bg-aurum-card-bg/70 border border-aurum-border/80 space-y-3 hover:border-aurum-gold/40 transition-all"
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="font-mono text-xs font-bold text-aurum-gold">
-                      {prod.productId}
-                    </span>
-                    <h5 className="text-sm font-bold text-aurum-text mt-0.5">{prod.titleEn}</h5>
-                    <p className="text-xs text-aurum-text-muted">
-                      {prod.purity} • {prod.weightGrams}g • Making Fee: {formatBDT(prod.makingFeeBdt)}
+                    <div className="flex items-center space-x-2">
+                      <span className="font-mono text-xs font-bold text-aurum-gold">
+                        {prod.productId}
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-aurum-surface font-semibold text-aurum-text">
+                        {prod.purity} • {prod.weightGrams}g
+                      </span>
+                    </div>
+                    <h5 className="text-sm font-bold text-aurum-text mt-1">{prod.titleEn}</h5>
+                    <p className="text-xs text-aurum-text-dim mt-0.5">{prod.titleBn}</p>
+                    <p className="text-xs text-aurum-text-muted mt-1">
+                      Assay: <strong className="text-aurum-text">{prod.certifier}</strong> • Making Fee: {formatBDT(prod.makingFeeBdt)}
                     </p>
                   </div>
-                  <span className="text-xs font-bold font-mono text-emerald-400">
-                    {formatBDT(prod.calculatedPriceBdt)}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-xs font-bold font-mono text-emerald-400 block">
+                      {formatBDT(prod.calculatedPriceBdt)}
+                    </span>
+                    <span className="text-[10px] text-aurum-text-dim font-mono">Live Rate Applied</span>
+                  </div>
                 </div>
 
                 <div className="pt-2 border-t border-aurum-border/40 flex items-center justify-between">
@@ -530,20 +624,263 @@ export function CommerceAdminControl() {
                       className="w-16 bg-aurum-midnight border border-aurum-border rounded-lg px-2 py-1 text-xs text-aurum-text font-mono text-center"
                     />
                     <span className="text-[11px] text-aurum-text-dim">
-                      ({prod.reservedQuantity} reserved)
+                      ({prod.reservedQuantity || 0} reserved)
                     </span>
                   </div>
 
-                  <button
-                    onClick={() => handleUpdateStock(prod)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-aurum-gold text-aurum-midnight hover:bg-aurum-gold-light"
-                  >
-                    Save Stock
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleUpdateStock(prod)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-aurum-gold text-aurum-midnight hover:bg-aurum-gold-light"
+                    >
+                      Save Stock
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(prod.productId, prod.titleEn)}
+                      className="p-1.5 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      title="Remove product"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Modal: Add New Bullion Bar Product */}
+          {showCreateProductModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+              <form
+                onSubmit={handleCreateProduct}
+                className="w-full max-w-xl rounded-3xl bg-aurum-card border border-aurum-gold/40 p-6 sm:p-8 space-y-4 shadow-2xl relative my-auto max-h-[90vh] overflow-y-auto"
+              >
+                <div className="flex items-center justify-between pb-3 border-b border-aurum-border">
+                  <div className="flex items-center space-x-2 text-aurum-gold font-bold">
+                    <Package className="w-5 h-5" />
+                    <h3 className="font-serif-luxury text-lg font-bold text-aurum-text">
+                      Add Official Minted Gold Bar / Product
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateProductModal(false)}
+                    className="p-1.5 rounded-xl bg-aurum-surface text-aurum-text-muted hover:text-white"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Quick Weight Selector Presets */}
+                <div>
+                  <label className="block text-xs font-semibold text-aurum-text-dim mb-1.5">
+                    Quick Weight Presets (১ গ্রাম থেকে ১০ গ্রাম পর্যন্ত গোল্ড বার):
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { g: 1, label: '1 Gram (১ গ্রাম)', fee: 450 },
+                      { g: 2, label: '2 Gram (২ গ্রাম)', fee: 650 },
+                      { g: 2.5, label: '2.5 Gram (২.৫ গ্রাম)', fee: 800 },
+                      { g: 5, label: '5 Gram (৫ গ্রাম)', fee: 1250 },
+                      { g: 10, label: '10 Gram (১০ গ্রাম)', fee: 2000 },
+                      { g: 11.664, label: '1 Bhori (১ ভরি)', fee: 2500 },
+                    ].map((preset) => (
+                      <button
+                        type="button"
+                        key={preset.g}
+                        onClick={() => {
+                          setNewProduct({
+                            ...newProduct,
+                            weightGrams: preset.g,
+                            makingFeeBdt: preset.fee,
+                            titleEn: `AurumSave Sovereign ${preset.g}g 24K Minted Gold Bar`,
+                            titleBn: `অরামসেভ ${preset.g} গ্রাম ২৪ ক্যারেট মিন্টেড গোল্ড বার`,
+                          });
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
+                          newProduct.weightGrams === preset.g
+                            ? 'bg-aurum-gold text-aurum-midnight shadow-gold-glow'
+                            : 'bg-aurum-surface border border-aurum-border text-aurum-text hover:border-aurum-gold/40'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block font-semibold text-aurum-text-dim mb-1">
+                      Title (English) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newProduct.titleEn}
+                      onChange={(e) => setNewProduct({ ...newProduct, titleEn: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text focus:outline-none focus:border-aurum-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-aurum-text-dim mb-1">
+                      Title (Bengali) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newProduct.titleBn}
+                      onChange={(e) => setNewProduct({ ...newProduct, titleBn: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text focus:outline-none focus:border-aurum-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-aurum-text-dim mb-1">
+                      Exact Weight in Grams *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.001"
+                      required
+                      value={newProduct.weightGrams}
+                      onChange={(e) => setNewProduct({ ...newProduct, weightGrams: Number(e.target.value) })}
+                      className="w-full px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text font-mono focus:outline-none focus:border-aurum-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-aurum-text-dim mb-1">
+                      Purity Grade *
+                    </label>
+                    <select
+                      value={newProduct.purity}
+                      onChange={(e) => setNewProduct({ ...newProduct, purity: e.target.value as PurityGrade })}
+                      className="w-full px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text font-mono focus:outline-none focus:border-aurum-gold"
+                    >
+                      <option value={PurityGrade.K24}>24K (99.99% Fine Gold)</option>
+                      <option value={PurityGrade.K22}>22K (91.6% Hallmark)</option>
+                      <option value={PurityGrade.K21}>21K (87.5%)</option>
+                      <option value={PurityGrade.K18}>18K (75.0%)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-aurum-text-dim mb-1">
+                      Making & Blister Fee (৳ BDT) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={newProduct.makingFeeBdt}
+                      onChange={(e) => setNewProduct({ ...newProduct, makingFeeBdt: Number(e.target.value) })}
+                      className="w-full px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text font-mono focus:outline-none focus:border-aurum-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-aurum-text-dim mb-1">
+                      Initial In-Stock Vault Quantity *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={newProduct.inStockQuantity}
+                      onChange={(e) => setNewProduct({ ...newProduct, inStockQuantity: Number(e.target.value) })}
+                      className="w-full px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text font-mono focus:outline-none focus:border-aurum-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-aurum-text-dim mb-1">
+                      Assay Certifier *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newProduct.certifier}
+                      onChange={(e) => setNewProduct({ ...newProduct, certifier: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text focus:outline-none focus:border-aurum-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-aurum-text-dim mb-1">
+                      Packaging Type *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newProduct.packagingType}
+                      onChange={(e) => setNewProduct({ ...newProduct, packagingType: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-aurum-text focus:outline-none focus:border-aurum-gold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-aurum-text-dim mb-1">
+                    Product Image Asset:
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { url: '/images/hero/bullion-macro.jpg', label: 'Gold Bullion Bar' },
+                      { url: '/images/hero/vault-cinematic.jpg', label: 'Depository Vault' },
+                      { url: '/images/hero/texture-cinematic.jpg', label: 'Pure Gold Texture' },
+                    ].map((img) => (
+                      <button
+                        type="button"
+                        key={img.url}
+                        onClick={() => setNewProduct({ ...newProduct, image: img.url })}
+                        className={`p-2 rounded-xl border text-center transition-all ${
+                          newProduct.image === img.url
+                            ? 'border-aurum-gold bg-aurum-gold/15 text-aurum-gold font-bold'
+                            : 'border-aurum-border bg-aurum-surface text-aurum-text-muted hover:text-white'
+                        }`}
+                      >
+                        <div className="h-12 rounded-lg bg-black/40 overflow-hidden mb-1">
+                          <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
+                        </div>
+                        <span className="text-[10px] block truncate">{img.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-aurum-text-dim mb-1">
+                    English Description
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={newProduct.descriptionEn}
+                    onChange={(e) => setNewProduct({ ...newProduct, descriptionEn: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-aurum-surface border border-aurum-border text-xs text-aurum-text focus:outline-none focus:border-aurum-gold"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end space-x-3 pt-3 border-t border-aurum-border">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateProductModal(false)}
+                    className="px-4 py-2 rounded-xl border border-aurum-border text-xs text-aurum-text hover:bg-white/5"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreatingProduct}
+                    className="px-5 py-2 rounded-xl bg-aurum-gold text-aurum-midnight hover:bg-aurum-gold-light text-xs font-bold shadow-gold-glow flex items-center space-x-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{isCreatingProduct ? 'Adding...' : 'Publish Product to Live Store'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       )}
 

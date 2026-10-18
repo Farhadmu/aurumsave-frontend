@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
 import { useLanguage } from '../../lib/language-context';
 import { apiRequest } from '../../lib/api';
@@ -28,10 +28,11 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState, ErrorState } from '../../components/ui/States';
 import { formatDateTime } from '../../lib/utils';
 
-export default function SupportPage() {
+function SupportContent() {
   const { user, isLoading: authLoading } = useAuth();
   const { t, formatLocalizedDateTime, language } = useLanguage();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [tickets, setTickets] = useState<any[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
@@ -67,6 +68,31 @@ export default function SupportPage() {
       loadTickets();
     }
   }, [user, authLoading, router]);
+
+  // Auto-open modal if user arrived from order tracking concierge link
+  useEffect(() => {
+    const orderIdParam = searchParams.get('orderId');
+    const catParam = searchParams.get('category');
+    const subjParam = searchParams.get('subject');
+
+    if (orderIdParam || catParam || subjParam) {
+      if (orderIdParam) setRelatedOrderId(orderIdParam);
+      if (catParam) {
+        if (catParam === 'DELIVERY_TRACKING') {
+          setCategory('GOLD_DELIVERY');
+        } else {
+          setCategory(catParam);
+        }
+      }
+      if (subjParam) {
+        setSubject(subjParam);
+      } else if (orderIdParam) {
+        setSubject(`অর্ডার ডেলিভারি কনসিয়ার্জ সহায়তা (#${orderIdParam})`);
+      }
+      setPriority(TicketPriority.HIGH);
+      setIsModalOpen(true);
+    }
+  }, [searchParams]);
 
   const loadTickets = async () => {
     setIsLoading(true);
@@ -559,5 +585,19 @@ export default function SupportPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SupportPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-aurum-midnight text-aurum-text flex items-center justify-center">
+          <div className="w-10 h-10 border-2 border-aurum-gold/30 border-t-aurum-gold rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <SupportContent />
+    </Suspense>
   );
 }

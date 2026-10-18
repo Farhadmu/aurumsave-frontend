@@ -87,7 +87,7 @@ export const BANGLADESH_DIVISIONS: Record<string, string[]> = {
 };
 
 interface DistrictPickupSelectorProps {
-  selectedPointId: string;
+  selectedPointId?: string;
   onSelectPoint: (point: PickupPoint) => void;
   lang?: 'en' | 'bn';
 }

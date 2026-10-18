@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { apiRequest } from '../../lib/api';
 import { OfficialProductCard, OfficialProduct } from '../../components/commerce/OfficialProductCard';
-import { StoreCheckoutModal } from '../../components/commerce/StoreCheckoutModal';
-import { ShieldCheck, Award, Lock, Sparkles, Building2, CheckCircle2, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Award, Lock, Sparkles, Building2, CheckCircle2, ArrowRight, Truck, Scale, Filter } from 'lucide-react';
 import { useLanguage } from '../../lib/language-context';
 
 const DEFAULT_STORE_PRODUCTS: OfficialProduct[] = [
@@ -101,11 +101,10 @@ const DEFAULT_STORE_PRODUCTS: OfficialProduct[] = [
 
 export default function OfficialGoldStorePage() {
   const { t, language } = useLanguage();
+  const router = useRouter();
   const [products, setProducts] = useState<OfficialProduct[]>(DEFAULT_STORE_PRODUCTS);
   const [loading, setLoading] = useState<boolean>(false);
-  const [selectedProduct, setSelectedProduct] = useState<OfficialProduct | null>(null);
-  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
+  const [selectedWeight, setSelectedWeight] = useState<number | 'ALL'>('ALL');
 
   const fetchProducts = async () => {
     try {
@@ -125,10 +124,13 @@ export default function OfficialGoldStorePage() {
   }, []);
 
   const handleBuyNow = (product: OfficialProduct, qty: number) => {
-    setSelectedProduct(product);
-    setSelectedQuantity(qty);
-    setIsCheckoutOpen(true);
+    router.push(`/store/checkout?productId=${product.productId}&qty=${qty}`);
   };
+
+  const filteredProducts = products.filter((p) => {
+    if (selectedWeight === 'ALL') return true;
+    return Math.abs(p.weightGrams - Number(selectedWeight)) < 0.05;
+  });
 
   return (
     <div className="min-h-screen bg-aurum-midnight text-aurum-text pb-20">
@@ -225,6 +227,35 @@ export default function OfficialGoldStorePage() {
           </a>
         </div>
 
+        {/* Weight Filter Bar */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-aurum-text-dim flex items-center space-x-1 mr-1">
+            <Filter className="w-3.5 h-3.5" />
+            <span>{language === 'bn' ? 'ওজন অনুযায়ী বাছাই:' : 'Filter by Weight:'}</span>
+          </span>
+          {[
+            { id: 'ALL', label: language === 'bn' ? 'সকল গোল্ড বার' : 'All Bullion Bars' },
+            { id: 1, label: language === 'bn' ? '১ গ্রাম (1g)' : '1 Gram' },
+            { id: 2, label: language === 'bn' ? '২ গ্রাম (2g)' : '2 Gram' },
+            { id: 2.5, label: language === 'bn' ? '২.৫ গ্রাম (2.5g)' : '2.5 Gram' },
+            { id: 5, label: language === 'bn' ? '৫ গ্রাম (5g)' : '5 Gram' },
+            { id: 10, label: language === 'bn' ? '১০ গ্রাম (10g)' : '10 Gram' },
+            { id: 11.664, label: language === 'bn' ? '১ ভরি (11.664g)' : '1 Bhori' },
+          ].map((chip) => (
+            <button
+              key={chip.id}
+              onClick={() => setSelectedWeight(chip.id as any)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono transition-all ${
+                selectedWeight === chip.id
+                  ? 'bg-aurum-gold text-aurum-midnight shadow-gold-glow'
+                  : 'bg-aurum-surface border border-aurum-border text-aurum-text hover:border-aurum-gold/40'
+              }`}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
@@ -234,9 +265,9 @@ export default function OfficialGoldStorePage() {
               />
             ))}
           </div>
-        ) : products.length > 0 ? (
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <OfficialProductCard
                 key={product.productId}
                 product={product}
@@ -248,8 +279,16 @@ export default function OfficialGoldStorePage() {
         ) : (
           <div className="p-12 text-center rounded-3xl bg-aurum-card-bg/30 border border-aurum-border">
             <p className="text-sm text-aurum-text-muted">
-              No store products currently listed. Please check back shortly.
+              {language === 'bn'
+                ? 'নির্বাচিত ওজনের কোনো বার এই মুহূর্তে স্টকে নেই।'
+                : 'No gold bars found matching the selected weight criteria.'}
             </p>
+            <button
+              onClick={() => setSelectedWeight('ALL')}
+              className="mt-3 px-4 py-2 rounded-xl bg-aurum-gold text-aurum-midnight text-xs font-bold"
+            >
+              View All Products
+            </button>
           </div>
         )}
       </section>
@@ -284,22 +323,12 @@ export default function OfficialGoldStorePage() {
               </div>
               <h4 className="text-base font-bold text-aurum-text">6-Digit OTP Secure Handover</h4>
               <p className="text-xs text-aurum-text-muted leading-relaxed">
-                Handover is strictly completed in person at authorized depository desks upon verifying your phone OTP and national ID.
+                Handover is strictly completed in person or at authorized depository desks upon verifying your phone OTP and national ID.
               </p>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Checkout Drawer/Modal */}
-      <StoreCheckoutModal
-        product={selectedProduct}
-        quantity={selectedQuantity}
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        onOrderCompleted={fetchProducts}
-        lang={language as any}
-      />
     </div>
   );
 }

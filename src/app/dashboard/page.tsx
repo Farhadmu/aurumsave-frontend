@@ -700,6 +700,11 @@ Minting Fee Consent: ৳1,000 flat certified assay hallmark fee agreed.`,
       </div>
 
       {/* =========================================================================
+          PHYSICAL GOLD BULLION ORDERS & REAL-TIME HANDOVER TRACKING
+         ========================================================================= */}
+      <MyCommerceOrders />
+
+      {/* =========================================================================
           RECENT VAULT TRANSACTIONS & AUDITED ORDERS
          ========================================================================= */}
       <div className="rounded-3xl bg-aurum-card border border-aurum-border p-6 sm:p-8 shadow-card-luxury space-y-6">
