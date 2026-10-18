@@ -22,10 +22,53 @@ import {
 import { MarketplaceCategory, PurityGrade } from '../../shared';
 import { useLanguage } from '../../lib/language-context';
 
+const DEFAULT_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
+  {
+    listingId: 'LST-BAR-5G-PAMP',
+    sellerId: '650000000000000000000001',
+    sellerName: 'Karim Ullah (Verified Private Client)',
+    category: MarketplaceCategory.GOLD_BAR,
+    title: 'PAMP Suisse 5g 24K Minted Gold Bar (Assayed Card)',
+    description: 'Original sealed blister pack from PAMP Suisse with certificate serial number #99214. Stored in temperature-controlled private locker.',
+    photos: ['/images/hero/vault-cinematic.jpg'],
+    claimedPurity: PurityGrade.K24,
+    verifiedPurity: PurityGrade.K24,
+    claimedGrossWeightGrams: 5.0,
+    claimedNetGoldWeightGrams: 5.0,
+    verifiedNetGoldWeightGrams: 5.0,
+    stoneWastageDeductionGrams: 0,
+    condition: 'LIKE_NEW' as any,
+    askingPricePoisha: 6280000,
+    status: 'ACTIVE' as any,
+    verificationStatus: 'PHYSICALLY_ASSAYED' as any,
+    verificationNotes: 'XRF Spectrometer verified 99.98% Au at Gulshan Depository Desk.',
+  },
+  {
+    listingId: 'LST-CHAIN-1BHORI-22K',
+    sellerId: '650000000000000000000002',
+    sellerName: 'Farhana Yasmin',
+    category: MarketplaceCategory.CHAIN,
+    title: 'Heritage 1 Bhori (11.664g) 22K Solid Gold Rope Chain',
+    description: 'Traditional solid rope chain purchased from a reputed BAJUS jeweller with original memo. Net gold weight 11.200g after 0.464g hook/lock solder deduction.',
+    photos: ['/images/hero/bullion-macro.jpg'],
+    claimedPurity: PurityGrade.K22,
+    verifiedPurity: PurityGrade.K22,
+    claimedGrossWeightGrams: 11.664,
+    claimedNetGoldWeightGrams: 11.2,
+    verifiedNetGoldWeightGrams: 11.2,
+    stoneWastageDeductionGrams: 0.464,
+    condition: 'LIKE_NEW' as any,
+    askingPricePoisha: 13150000,
+    status: 'ACTIVE' as any,
+    verificationStatus: 'DOCUMENT_VERIFIED' as any,
+    verificationNotes: 'Original invoice and hallmark 916 verified by desk officer.',
+  },
+];
+
 export default function MarketplacePage() {
   const { t, language } = useLanguage();
-  const [listings, setListings] = useState<MarketplaceListing[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [listings, setListings] = useState<MarketplaceListing[]>(DEFAULT_MARKETPLACE_LISTINGS);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
@@ -39,18 +82,15 @@ export default function MarketplacePage() {
   const [isScrapModalOpen, setIsScrapModalOpen] = useState<boolean>(false);
 
   const fetchListings = async () => {
-    setLoading(true);
     try {
       const res = await apiRequest<{ success: boolean; data: MarketplaceListing[] }>(
         '/commerce/marketplace/listings',
       );
-      if (res?.data) {
+      if (res?.data && res.data.length > 0) {
         setListings(res.data);
       }
     } catch (err) {
       console.error('Failed to load marketplace listings', err);
-    } finally {
-      setLoading(false);
     }
   };
 

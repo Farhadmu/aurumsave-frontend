@@ -39,7 +39,8 @@ export interface MarketplaceListing {
   verificationStatus: MarketplaceVerificationStatus;
   verifiedPurity?: PurityGrade;
   verifiedNetGoldWeightGrams?: number;
-  createdAt: string;
+  verificationNotes?: string;
+  createdAt?: string;
 }
 
 interface MarketplaceListingCardProps {
